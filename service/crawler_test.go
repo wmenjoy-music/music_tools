@@ -41,7 +41,7 @@ func TestCrawler_ParsePage(t *testing.T) {
 	}
 	assert.NotNil(t, crawler)
 
-	b , err := crawler.ParsePage("http://metalsucks.net", func(body io.ReadCloser) (interface{}, error) {
+	b , err := crawler.ParsePage("http://metalsucks.net", func(body io.Reader) (interface{}, error) {
 		doc, err := goquery.NewDocumentFromReader(body)
 		if err != nil {
 			return nil ,err

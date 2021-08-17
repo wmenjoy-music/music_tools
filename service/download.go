@@ -56,6 +56,7 @@ func Run(group sync.WaitGroup){
 			}
 
 		case <-signalChan:
+			group.Done()
 			return
 		}
 	}
