@@ -11,14 +11,12 @@ import (
 
 type musifyClub struct {
 	BaseUrl string
-	Crawler service.Crawler
 }
 
 var _ service.ISite = (*musifyClub)(nil)
-func NewSite(crawler service.Crawler) service.ISite{
+func NewSite() service.ISite{
 	return musifyClub{
 		BaseUrl: "https://myzcloud.me/%s",
-		Crawler: crawler,
 	}
 }
 

@@ -5,11 +5,10 @@ import (
 	"os"
 	"testing"
 	model "wmenjoy/music/models"
-	"wmenjoy/music/service"
 )
 
 func TestMusifyClub_AlbumInfoParser(t *testing.T) {
-	musifyClub := NewSite(service.Crawler{})
+	musifyClub := NewSite()
 
 	//crawler := service.Crawler{}
 	file, err := os.Open("/Users/liujinliang/workspace/music/music_manager/test.html")

@@ -1,13 +1,17 @@
 package service
 
 import (
+	"fmt"
+	"os"
 	"sync"
 	model "wmenjoy/music/models"
 )
 
 var songChan = make(chan downloadInfo, 10)
 
-var signalChan = make(chan struct{}, 10)
+var closeChan = make(chan struct{}, 10)
+
+var sigChan = make(chan os.Signal)
 
 var crawler Crawler
 
@@ -16,9 +20,19 @@ type downloadInfo struct {
 	downloadDir  string
 }
 
+func Start(threadNum int){
+	wg := sync.WaitGroup{}
+	wg.Add(threadNum)
+	for i :=0; i < threadNum; i++{
+		go Run(wg)
+	}
+	wg.Wait()
+}
+
+
 func Close(){
 	close(songChan)
-	signalChan <- struct{}{}
+	close(closeChan)
 }
 
 // PrepareDownload 准备目录， 将下载数据发送到Channels
@@ -49,15 +63,24 @@ func PrepareDownload(info model.AlbumInfo, baseDir string) {
 func Run(group sync.WaitGroup){
 	for {
 		select {
-		case x := <-songChan:
+		case x, ok := <-songChan:
+			if !ok {
+				group.Done()
+				return
+			}
 			err := crawler.Download(x.object, x.downloadDir)
 			if err != nil {
 				//
 			}
 
-		case <-signalChan:
-			group.Done()
+		case _, ok := <-closeChan:
+			if !ok {
+				group.Done()
+			}
 			return
+		case sig := <-sigChan:
+			fmt.Println("接受到来自系统的信号：",sig.String())
+			Close()
 		}
 	}
 }
