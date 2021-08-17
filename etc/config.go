@@ -1,7 +1,8 @@
 package etc
 
 type Config struct {
-	LogLevel  string
-	LogFromat string
 	DownloadDir string
+	Url 		string
+	ThreadNum	int
+	Urls 		[]string
 }
