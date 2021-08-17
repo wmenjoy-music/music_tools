@@ -20,14 +20,18 @@ var (
 	useNew     bool
 
 	rootCmd = &cobra.Command{
-		Use:     "mdm ",
+		Use:     "mdm [flags] url[ url]",
 		Short:   "音乐下载工具",
 		Long:    `音乐下载工具`,
 		Version: "0.1.0",
 		Args: func(cmd *cobra.Command, args []string) error {
 			if len(args) <= 0{
-				return errors.New("参数数量不对")
+				if viper.Get("url") == "" {
+					return errors.New("请指定待抓取的网页")
+				}
+				return nil
 			}
+
 
 			viper.Set("urls", args)
 
@@ -61,7 +65,7 @@ func MainErr() error {
 		"Specify an alternate cluster Toml file")
 	rootCmd.PersistentFlags().StringVarP(&configPath, "configPath", "p", ".",
 		"Specify an alternate config location")
-	ViperIntBindAndSetP(rootCmd,"threadNumber", "n", 1,
+	ViperIntBindAndSetP(rootCmd,"ThreadNum", "n", 1,
 		"线程数量")
 	ViperStringBindAndSetP(rootCmd,"url", "u", "",
 		"访问url")
