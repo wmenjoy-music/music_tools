@@ -8,8 +8,8 @@ import (
 type ISite interface {
 	// GetUrl 根据Path 获取绝对的url
 	GetUrl(path string) string
-	AlbumListParser() func(body io.Reader)(interface{}, error)
-	AlbumInfoParser() func(body io.Reader)(interface{}, error)
+	AlbumListParser() func(body io.Reader) (interface{}, error)
+	AlbumInfoParser() func(body io.Reader) (interface{}, error)
 }
 
 type ListOptions struct {
@@ -23,7 +23,7 @@ type Lister interface {
 	GetAlbumsByGenre(id string, options ...ListOptions) ([]model.AlbumInfo, error)
 	GetAlbumsByYear(year string, options ...ListOptions) ([]model.AlbumInfo, error)
 	GetAlbumsByArtist(id string, options ...ListOptions) ([]model.AlbumInfo, error)
-	GetArtists(options ...ListOptions)(model.ArtistInfo, error)
+	GetArtists(options ...ListOptions) (model.ArtistInfo, error)
 }
 
 type Detailer interface {
@@ -31,5 +31,4 @@ type Detailer interface {
 }
 
 type DefaultDetailer struct {
-
 }
