@@ -3,6 +3,7 @@ package model
 type ArtistInfo struct {
 	Name    string
 	Id      string
+	Url     string
 	Memeber []string
 	Country string
 }
@@ -27,9 +28,11 @@ type AlbumInfo struct {
 	Genre      []GenreInfo
 	MusicList  []MusicInfo
 	DataType   string
+	Year       string
 	CreateDate string
 	Category   string
 	Url        string
+	Rating     string
 }
 
 type GenreInfo struct {
