@@ -2,28 +2,28 @@ package model
 
 type ArtistInfo struct {
 	Name    string
-	Id		string
+	Id      string
 	Memeber []string
 	Country string
 }
 
 type MusicInfo struct {
-	Name        string
-	Id			string
-	Url         string
-	Album       string
-	Artist      string
-	Postion     string
-	DataTitle   string
-	Download    string
+	Name      string
+	Id        string
+	Url       string
+	Album     string
+	Artist    string
+	Postion   string
+	DataTitle string
+	Download  string
 }
 
 type AlbumInfo struct {
 	Name       string
-	Id		   string
+	Id         string
 	FullName   string
 	Image      string
-	Artist []ArtistInfo
+	Artist     []ArtistInfo
 	Genre      []GenreInfo
 	MusicList  []MusicInfo
 	DataType   string
@@ -33,17 +33,16 @@ type AlbumInfo struct {
 }
 
 type GenreInfo struct {
-	Name   string
-	Id     string
-	Url    string
-	Desc   string
-
+	Name string
+	Id   string
+	Url  string
+	Desc string
 }
 
 // CategoryTypeMap 枚举值
 var CategoryTypeMap map[string]string = make(map[string]string, 15)
 
-func init(){
+func init() {
 	CategoryTypeMap["0"] = "All"
 	CategoryTypeMap["1"] = "Unsorted"
 	CategoryTypeMap["2"] = "Album"
@@ -60,5 +59,3 @@ func init(){
 	CategoryTypeMap["13"] = "Unoffical Compilation"
 	CategoryTypeMap["14"] = "OST"
 }
-
-
