@@ -1,7 +1,6 @@
 package app
 
 import (
-	"strings"
 	"wmenjoy/music/etc"
 	model "wmenjoy/music/models"
 	"wmenjoy/music/service"
@@ -24,30 +23,30 @@ func Download() error{
 	urls :=config.Urls
     albumList := make([]model.AlbumInfo, 0)
 	for _, url := range urls {
-		if strings.HasPrefix(url, "https://w1.musify.club/release") ||
-		  strings.HasPrefix(url, "https://w1.musify.club/en/release"){
+		if site.IsAlbumInfoUrl(url){
 			result, err := crawler.ParsePage(url, site.AlbumInfoParser())
 			if err != nil {
 				return err
 			}
 			albumList = append(albumList, result.(model.AlbumInfo))
 		} else {
-			realUrl := url
-			if !strings.HasSuffix(realUrl, "/release")}{
-				realUrl = realUrl + "/release"
-			} 
-
-			result, err := crawler.ParsePage(url, site.AlbumInfoParser())
+			result, err := crawler.ParsePage(site.NormalUrl(url), site.AlbumListParser())
 			if err != nil {
 				return err
 			}
-		
-			albumList = append(albumList, result.([]model.MusicInfo))
-			musicList := crawler.ParsePage(url, )
+			for _, albumInfo := range result.([]model.AlbumInfo) {
+
+				result, err := crawler.ParsePage(albumInfo.Url, site.AlbumInfoParser())
+				if err != nil {
+					return err
+				}
+				albumList = append(albumList, result.(model.AlbumInfo))
+			}
 		}
 		
 	}
 
+	logrus.Printf("%+v", albumList)
 	//service.PrepareDownload(,)
 	
 

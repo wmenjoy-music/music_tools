@@ -5,4 +5,6 @@ type Config struct {
 	Url 		string
 	ThreadNum	int
 	Urls 		[]string
+	filterTypes string
+	filterDateTypes []string
 }

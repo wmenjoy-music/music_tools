@@ -12,7 +12,7 @@ func TestMusifyClub_AlbumInfoParser(t *testing.T) {
 	musifyClub := NewSite()
 
 	//crawler := service.Crawler{}
-	file, err := os.Open("/Users/liujinliang/workspace/music/music_manager/test/test.html")
+	file, err := os.Open("/Users/liujinliang/workspace/music/music_manager/test/album_info.html")
 	assert.Nil(t, err)
 	p, err := musifyClub.AlbumInfoParser()(file)
 

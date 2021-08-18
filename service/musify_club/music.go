@@ -19,8 +19,19 @@ var _ service.ISite = (*musifyClub)(nil)
 
 func NewSite() service.ISite {
 	return musifyClub{
-		BaseUrl: "https://myzcloud.me/%s",
+		BaseUrl: "https://w1.musify.club%s",
 	}
+}
+
+func (m musifyClub) NormalUrl(url string) string {
+	if !strings.HasSuffix(url, "/releases") {
+		return url + "/releases"
+	}
+	return url
+}
+func (m musifyClub) IsAlbumInfoUrl(url string) bool {
+	return strings.HasPrefix(url, "https://w1.musify.club/release") ||
+		strings.HasPrefix(url, "https://w1.musify.club/en/release")
 }
 
 func (m musifyClub) AlbumListParser() func(Body io.Reader) (interface{}, error) {
@@ -163,10 +174,16 @@ func (m musifyClub) AlbumInfoParser() func(body io.Reader) (interface{}, error) 
 				})
 			})
 		}
+		typeI := albumInfoDiv.Find("i.zmdi.zmdi-collection-music.zmdi-hc-fw")
+		category := ""
+		if typeI != nil {
+			category = strings.TrimSpace(typeI.Parent().Text())
+		}
 
 		artistDiv := albumInfoDiv.Find("ul.icon-list.album-info")
 		artists := make([]model.ArtistInfo, 0)
 		createDate := ""
+		year := ""
 		if artistDiv != nil {
 
 			artistDiv.Find("a[itemprop=byArtist]").Each(func(i int, selection *goquery.Selection) {
@@ -183,8 +200,10 @@ func (m musifyClub) AlbumInfoParser() func(body io.Reader) (interface{}, error) 
 			})
 
 			timeDiv := albumInfoDiv.Find("time")
+
 			if timeDiv != nil {
 				createDate, _ = timeDiv.Attr("datetime")
+				year = timeDiv.Parent().Find("a").Text()
 			}
 
 		}
@@ -199,45 +218,87 @@ func (m musifyClub) AlbumInfoParser() func(body io.Reader) (interface{}, error) 
 				songId, _ := selection.Attr("id")
 				downloadUrl := ""
 				dataPosition := ""
-				playDiv := selection.Find("div.playlist__control")
+				songId = songId[len("playerDiv"):]
+				playDiv := selection.Find("div#play_" + songId)
+				dataTitle := ""
 				if playDiv != nil {
 					downloadUrl, _ = playDiv.Attr("data-url")
 					dataPosition, _ = playDiv.Attr("data-position")
+					dataTitle, _ = playDiv.Attr("data-title")
 				}
+
+				songUrl, _ := selection.Find("div.playlist__heading a.strong").Attr("href")
+				stars := selection.Find("i.zmdi.zmdi-star-circle").Parent().Text()
+
+				trackDetailDiv := selection.Find("div.track__details")
+				duration := ""
+				bitrate := ""
+				if trackDetailDiv != nil {
+					trackDetailDiv.Find("span").Each(func(i int, selection *goquery.Selection) {
+						if strings.Contains(selection.Text(), "Кб/с") {
+							bitrate = strings.TrimSpace(strings.ReplaceAll(selection.Text(), "Кб/с", "Kbps"))
+						} else if strings.Contains(selection.Text(), ":") {
+							duration = selection.Text()
+						}
+					})
+
+				}
+
 				spanDelete := selection.Find("span.badge.badge-pill.badge-danger")
-				if spanDelete != nil {
-					logrus.Print(musicName + " is " + spanDelete.Get(0).FirstChild.Data)
+				if downloadUrl == "" || (spanDelete != nil && spanDelete.Size() != 0 && spanDelete.Get(0).FirstChild.Data == "Недоступен") {
+					logrus.Print(musicName + " is deleted")
 					return
 				}
 
 				songs = append(songs, model.MusicInfo{
-					Name:    musicName,
-					Album:   albumName,
-					Artist:  musicArtist,
-					Id:      songId[len("playerDiv"):],
-					Url:     downloadUrl,
-					Postion: dataPosition,
+					Name:        musicName,
+					Album:       albumName,
+					Artist:      musicArtist,
+					Id:          songId,
+					Url:         m.GetUrl(songUrl),
+					Postion:     dataPosition,
+					DownloadUrl: m.GetUrl(downloadUrl),
+					DataTitle:   dataTitle,
+					Stars:       stars,
+					BitRate:     bitrate,
+					Duration:    duration,
 				})
 
 			})
 
 		}
 
+		rating, _ := bodyContent.Find("select#rating").Attr("data-rating")
+
 		return model.AlbumInfo{
 			Id:         id,
+			Url:        m.GetUrl(id),
 			Name:       albumName,
 			Image:      image,
 			FullName:   bodyContent.Find("h1").Get(0).FirstChild.Data,
 			Artist:     m.parseAlbumInfoArtist(artists, bodyContent),
 			CreateDate: createDate,
+			Year:       year,
 			Genre:      genres,
 			MusicList:  songs,
+			Category:   model.NormalCategory(category),
+			DataType:   model.TypeCategoryMap[category],
+			Rating:     rating,
 		}, nil
 	}
 }
 
 func (m musifyClub) GetUrl(path string) string {
-	return fmt.Sprintf(m.BaseUrl, path)
+	if strings.HasPrefix(path, "https://") ||
+		strings.HasPrefix(path, "http://") {
+		return path
+	}
+	if strings.HasPrefix(path, "/") {
+		return fmt.Sprintf(m.BaseUrl, path)
+	} else {
+		return fmt.Sprintf(m.BaseUrl+"/", path)
+	}
+
 }
 
 func (m musifyClub) parseAlbumListArtist(bodyContent *goquery.Selection) *model.ArtistInfo {
@@ -271,7 +332,7 @@ func (m musifyClub) parseAlbumListArtist(bodyContent *goquery.Selection) *model.
 }
 
 func (m musifyClub) parseAlbumInfoArtist(extractArtist []model.ArtistInfo, bodyContent *goquery.Selection) []model.ArtistInfo {
-	if extractArtist != nil {
+	if extractArtist != nil && len(extractArtist) > 0 {
 		return extractArtist
 	}
 

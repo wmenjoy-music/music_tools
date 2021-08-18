@@ -7,9 +7,11 @@ import (
 
 type ISite interface {
 	// GetUrl 根据Path 获取绝对的url
+	IsAlbumInfoUrl(url string) bool
 	GetUrl(path string) string
 	AlbumListParser() func(body io.Reader) (interface{}, error)
 	AlbumInfoParser() func(body io.Reader) (interface{}, error)
+	NormalUrl(url string) string
 }
 
 type ListOptions struct {

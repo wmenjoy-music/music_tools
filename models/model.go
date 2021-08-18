@@ -16,7 +16,10 @@ type MusicInfo struct {
 	Artist    string
 	Postion   string
 	DataTitle string
-	Download  string
+	DownloadUrl  string
+	Duration   string
+	Stars     string
+	BitRate    string
 }
 
 type AlbumInfo struct {
@@ -44,6 +47,11 @@ type GenreInfo struct {
 
 // CategoryTypeMap 枚举值
 var CategoryTypeMap map[string]string = make(map[string]string, 15)
+var TypeCategoryMap map[string]string = make(map[string]string, 15)
+
+func NormalCategory(category string) string {
+	return CategoryTypeMap[TypeCategoryMap[category]]
+}
 
 func init() {
 	CategoryTypeMap["0"] = "All"
@@ -61,4 +69,33 @@ func init() {
 	CategoryTypeMap["12"] = "Split"
 	CategoryTypeMap["13"] = "Unoffical Compilation"
 	CategoryTypeMap["14"] = "OST"
+	TypeCategoryMap["All"] = "0"
+	TypeCategoryMap["Все"] = "0"
+	TypeCategoryMap["Unsorted"] = "1"
+	TypeCategoryMap["Тип не назначен"] = "1"
+	TypeCategoryMap["Album"] = "2"
+	TypeCategoryMap["Студийный альбом"] = "2"
+	TypeCategoryMap["EP"] = "3"
+	TypeCategoryMap["Single"] = "4"
+	TypeCategoryMap["Сингл"] = "4"
+	TypeCategoryMap["Bootleg"] = "5"
+	TypeCategoryMap["Бутлег"] = "5"
+	TypeCategoryMap["Live"] = "6"
+	TypeCategoryMap["Compilation"] = "7"
+	TypeCategoryMap["Сборник разных исполнителей"] = "7"
+	TypeCategoryMap["MixType"] = "8"
+	TypeCategoryMap["Микстейп"] = "8"
+	TypeCategoryMap["Demo"] = "9"
+	TypeCategoryMap["Демо"] = "9"
+	TypeCategoryMap["DJ Mix"] = "10"
+	TypeCategoryMap["DJ микс"] = "10"
+	TypeCategoryMap["Group Compilations"] = "11"
+	TypeCategoryMap["Сборник исполнителя"] = "11"
+	TypeCategoryMap["Split"] = "12"
+	TypeCategoryMap["Unoffical Compilation"] = "13"
+	TypeCategoryMap["Неофициальный сборник"] = "13"
+	TypeCategoryMap["OST"] = "14"
+	TypeCategoryMap["Саундтрек"] = "14"
+
+
 }
