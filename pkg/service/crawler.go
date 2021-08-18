@@ -3,9 +3,6 @@ package service
 import (
 	"errors"
 	"fmt"
-	ansi "github.com/k0kubun/go-ansi"
-	"github.com/schollz/progressbar/v3"
-	"github.com/sirupsen/logrus"
 	"io"
 	"math/rand"
 	"net/http"
@@ -13,6 +10,10 @@ import (
 	"path"
 	"time"
 	"wmenjoy/music/pkg/utils"
+
+	ansi "github.com/k0kubun/go-ansi"
+	"github.com/schollz/progressbar/v3"
+	"github.com/sirupsen/logrus"
 )
 
 type Options struct {
@@ -57,7 +58,7 @@ type DownloadMusic struct {
 var _ IDownloadObject = (*DownloadMusic)(nil)
 
 func (obj DownloadMusic) getFileName() string {
-	return fmt.Sprintf("%s. %s - %s.%s", obj.Name, obj.Artist, obj.Name, obj.FileType)
+	return fmt.Sprintf("%s. %s - %s.%s", obj.index, obj.Artist, obj.Name, obj.FileType)
 }
 
 func (obj DownloadMusic) getDownloadUrl() string {
@@ -89,9 +90,13 @@ func (c Crawler) Download(obj IDownloadObject, downloadDir string) error {
 	if obj == nil {
 		return errors.New("不合法的下载对象")
 	}
-	fileName := obj.getFileName()
-	logrus.Printf("开始下载文件：%s", fileName)
 
+	fileName := utils.ValidateFileName(obj.getFileName())
+	logrus.Printf("开始下载文件：%s", path.Join(downloadDir, fileName))
+	if val, _ := utils.PathExists(path.Join(downloadDir, fileName)); val {
+		logrus.Printf("文件已经下载：%s", path.Join(downloadDir, fileName))
+		return nil
+	}
 	rand := time.Duration(rand.Intn(1000))
 	time.Sleep(rand * time.Millisecond)
 
@@ -106,16 +111,19 @@ func (c Crawler) Download(obj IDownloadObject, downloadDir string) error {
 
 	var out io.Writer
 
-	if val, err := utils.PathExists(path.Join(downloadDir, fileName)); val && err == nil {
-		return nil
-	}
-
 	f, err := os.Create(path.Join(downloadDir, fileName+".bak"))
 	defer func(f *os.File) {
 		err := f.Close()
 		if err != nil {
 			logrus.Printf("close File %s Error:%s", path.Join(downloadDir, fileName, ".bak"), err.Error())
 		}
+		err = os.Rename(path.Join(downloadDir, fileName+".bak"), path.Join(downloadDir, fileName))
+
+		if err != nil {
+			logrus.Printf("下载完成文件：%s 失败:%s", fileName, err.Error())
+		}
+
+		logrus.Printf("下载完成文件：%s", fileName)
 	}(f)
 
 	if err != nil {
@@ -143,11 +151,9 @@ func (c Crawler) Download(obj IDownloadObject, downloadDir string) error {
 	_, err = io.Copy(out, resp.Body)
 
 	if err != nil {
+		logrus.Printf("下载完成文件：%s 失败:%s", fileName, err.Error())
 		return err
 	}
 
-	err = os.Rename(path.Join(downloadDir, fileName+".bak"), path.Join(downloadDir, fileName))
-
-	logrus.Printf("下载完成文件：%s", fileName)
 	return err
 }

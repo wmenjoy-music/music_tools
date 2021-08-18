@@ -2,6 +2,7 @@ package service
 
 import (
 	"fmt"
+	"io/fs"
 	"os"
 	"path"
 	"sync"
@@ -43,7 +44,6 @@ func NewDownloader() Downloader {
 		},
 		wg: sync.WaitGroup{},
 	}
-	download.Start(viper.GetInt("threadNum"))
 	return download
 }
 
@@ -53,13 +53,19 @@ type downloadInfo struct {
 }
 
 func (d *Downloader) Start(threadNum int) {
+	logrus.Printf("threadNum is %d", threadNum)
 	d.wg.Add(threadNum)
 	for i := 0; i < threadNum; i++ {
-		go d.Run(d.wg)
+		go d.Run(&d.wg)
 	}
 }
 
+func (d *Downloader) CloseDataChannel() {
+	close(d.songChan)
+}
+
 func (d *Downloader) Wait() {
+	d.Start(viper.GetInt("threadNum"))
 	d.wg.Wait()
 }
 
@@ -111,6 +117,9 @@ func (d Downloader) PrepareDownload(info model.AlbumInfo, baseDir string) {
 		if song.DownloadUrl == "" {
 			continue
 		}
+
+		os.MkdirAll(BaseAlbumDownloadDir(baseDir, info), fs.ModePerm)
+
 		d.songChan <- downloadInfo{
 			object: DownloadMusic{
 				DownloadUrl: song.DownloadUrl,
@@ -126,13 +135,14 @@ func (d Downloader) PrepareDownload(info model.AlbumInfo, baseDir string) {
 	logrus.Printf("入队列完成：%s", info.Name)
 }
 
-func (d Downloader) Run(group sync.WaitGroup) {
+func (d Downloader) Run(group *sync.WaitGroup) {
 	logrus.Printf("线程启动")
+	defer group.Done()
 	for {
 		select {
 		case x, ok := <-d.songChan:
 			if !ok {
-				group.Done()
+				logrus.Printf("线程池关闭")
 				return
 			}
 			err := d.crawler.Download(x.object, x.downloadDir)
@@ -142,7 +152,7 @@ func (d Downloader) Run(group sync.WaitGroup) {
 
 		case _, ok := <-d.closeChan:
 			if !ok {
-				group.Done()
+				return
 			}
 			return
 		case sig := <-d.sigChan:
