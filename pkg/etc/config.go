@@ -7,4 +7,5 @@ type Config struct {
 	Urls            []string
 	filterTypes     string
 	filterDateTypes []string
+
 }

@@ -15,5 +15,5 @@
 
 ## 使用
 ```
-./mdm.exe -n 2 https://w1.musify.club/artist/el-michels-affair-165503/releases
+./mdm -n 2 https://w1.musify.club/artist/el-michels-affair-165503/releases
 ```

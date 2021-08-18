@@ -60,8 +60,8 @@ var (
 func MainErr() error {
 	cobra.OnInitialize(initConfig)
 
-	rootCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "db2db.toml",
-		"Specify an alternate cluster Toml file")
+	rootCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "mdm.yaml",
+		"Specify an alternate cluster yaml file")
 	rootCmd.PersistentFlags().StringVarP(&configPath, "configPath", "p", ".",
 		"Specify an alternate config location")
 	ViperIntBindAndSetP(rootCmd, "ThreadNum", "n", 1,
