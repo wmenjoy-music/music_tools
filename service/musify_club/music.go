@@ -15,6 +15,10 @@ type musifyClub struct {
 	BaseUrl string
 }
 
+func init(){
+	service.RegistSite("musify_club", NewSite)
+}
+
 var _ service.ISite = (*musifyClub)(nil)
 
 func NewSite() service.ISite {
@@ -188,14 +192,13 @@ func (m musifyClub) AlbumInfoParser() func(body io.Reader) (interface{}, error) 
 
 			artistDiv.Find("a[itemprop=byArtist]").Each(func(i int, selection *goquery.Selection) {
 				id, _ := selection.Attr("href")
-				genreA := selection.Get(0)
-				if genreA != nil {
-					artists = append(artists, model.ArtistInfo{
+
+				artists = append(artists, model.ArtistInfo{
 						Id:   id,
-						Name: selection.Get(0).FirstChild.Data,
+						Name: strings.TrimSpace(selection.Text()),
 						Url:  m.GetUrl(id),
-					})
-				}
+				})
+
 
 			})
 

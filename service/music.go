@@ -4,21 +4,28 @@ import (
 	"io"
 	"strings"
 	model "wmenjoy/music/models"
-	"wmenjoy/music/service/musify_club"
 )
 
 type ISite interface {
-	// GetUrl 根据Path 获取绝对的url
 	IsAlbumInfoUrl(url string) bool
+	// GetUrl 根据Path 获取绝对的url
 	GetUrl(path string) string
 	AlbumListParser() func(body io.Reader) (interface{}, error)
 	AlbumInfoParser() func(body io.Reader) (interface{}, error)
 	NormalUrl(url string) string
 }
 
+type SiteFactory func() ISite
+
+var siteRegistry map[string]SiteFactory = make(map[string]SiteFactory, 1)
+
+func RegistSite(name string, factory SiteFactory){
+	siteRegistry[name] = factory
+}
+
 func GetSite(url string) ISite{
 	if strings.Contains(url, "w1.musify.club") {
-		return musify_club.NewSite()
+		return siteRegistry["musify_club"]()
 	}
 	return nil
 }
@@ -39,8 +46,10 @@ type Lister interface {
 	GetArtists(options ...ListOptions) (model.ArtistInfo, error)
 }
 
+
+
 type Detailer interface {
-	GetAlbum(id string) ([]model.MusicInfo, error)
+	GetAlbum(id string) (model.AlbumInfo, error)
 }
 
 type DefaultDetailer struct {

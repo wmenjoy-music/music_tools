@@ -69,7 +69,7 @@ func MainErr() error {
 		"线程数量")
 	ViperStringBindAndSetP(rootCmd,"url", "u", "",
 		"访问url")
-	ViperStringBindAndSetP(rootCmd,"downloadDir", "d", "./songs",
+	ViperStringBindAndSetP(rootCmd,"downloadDir", "d", "",
 		"下载")
 
 	return rootCmd.Execute()

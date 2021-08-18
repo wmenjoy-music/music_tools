@@ -5,10 +5,14 @@ import (
 	"fmt"
 	ansi "github.com/k0kubun/go-ansi"
 	"github.com/schollz/progressbar/v3"
+	"github.com/sirupsen/logrus"
 	"io"
+	"math/rand"
 	"net/http"
 	"os"
 	"path"
+	"time"
+	"wmenjoy/music/utils"
 )
 type Options struct {
 	ShowProgress bool
@@ -68,7 +72,8 @@ type Crawler struct {
 
 // ParsePage 使用get方法获取页面
 func (c Crawler) ParsePage(url string, objectConsumer func(Body io.Reader)(interface{}, error))(interface{}, error){
-
+	rand := time.Duration(rand.Intn(1000))
+	time.Sleep(rand * time.Millisecond)
 	res, err := http.Get(url)
 	if err != nil {
 		return nil, err
@@ -84,6 +89,11 @@ func (c Crawler) Download(obj IDownloadObject, downloadDir string) (error) {
 	if obj == nil {
 		return errors.New("不合法的下载对象")
 	}
+	fileName := obj.getFileName()
+	logrus.Printf("开始下载文件：%s", fileName)
+
+	rand := time.Duration(rand.Intn(1000))
+	time.Sleep(rand * time.Millisecond)
 
 	resp, err := http.Get(obj.getDownloadUrl())
 
@@ -93,11 +103,21 @@ func (c Crawler) Download(obj IDownloadObject, downloadDir string) (error) {
 
 	length := resp.ContentLength
 	defer resp.Body.Close()
-	fileName := obj.getFileName()
+
 	var out io.Writer
 
-	f, err := os.Create(path.Join(downloadDir, fileName))
-	defer f.Close()
+
+	if val, err := utils.PathExists(path.Join(downloadDir, fileName)); val && err == nil{
+		return nil
+	}
+
+	f, err := os.Create(path.Join(downloadDir, fileName + ".bak"))
+	defer func(f *os.File) {
+		err := f.Close()
+		if err != nil {
+			logrus.Printf("close File %s Error:%s", path.Join(downloadDir, fileName, ".bak"), err.Error())
+		}
+	}(f)
 
 	if err != nil {
 		return err
@@ -123,5 +143,12 @@ func (c Crawler) Download(obj IDownloadObject, downloadDir string) (error) {
 
 	_, err = io.Copy(out, resp.Body)
 
+	if err != nil {
+		return err
+	}
+
+	err = os.Rename(path.Join(downloadDir, fileName + ".bak"), path.Join(downloadDir, fileName))
+
+	logrus.Printf("下载完成文件：%s", fileName)
 	return err
 }

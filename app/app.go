@@ -1,17 +1,33 @@
 package app
 
 import (
+	"encoding/json"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
+	"io/fs"
+	"os"
+	"path"
 	"wmenjoy/music/etc"
 	model "wmenjoy/music/models"
 	"wmenjoy/music/service"
+	_ "wmenjoy/music/service/musify_club"
+	"wmenjoy/music/utils"
 )
 
 func Download() error{
 	config, err:= ParseConfig()
 	if err != nil {
 		return err
+	}
+	if config.DownloadDir == "" {
+		config.DownloadDir = "./songs"
+	}
+
+	if exist, err := utils.PathExists(config.DownloadDir); !exist || err != nil{
+		err = os.MkdirAll(config.DownloadDir, fs.ModePerm)
+		if err != nil {
+			return err
+		}
 	}
 
 	logrus.Printf("%+v", config)
@@ -26,7 +42,14 @@ func Download() error{
 			if err != nil {
 				return err
 			}
-			albumList = append(albumList, result.(model.AlbumInfo))
+			album := result.(model.AlbumInfo)
+			targetDir := service.BaseAlbumDownloadDir(config.DownloadDir, album)
+			err = os.MkdirAll(targetDir, fs.ModePerm)
+			if err != nil {
+				return err
+			}
+			saveAlumInfo(targetDir, album)
+			albumList = append(albumList, album)
 		} else {
 			result, err := crawler.ParsePage(site.NormalUrl(url), site.AlbumListParser())
 			if err != nil {
@@ -34,21 +57,69 @@ func Download() error{
 			}
 			for _, albumInfo := range result.([]model.AlbumInfo) {
 
-				result, err := crawler.ParsePage(albumInfo.Url, site.AlbumInfoParser())
+				targetDir := service.BaseAlbumDownloadDir(config.DownloadDir, albumInfo)
+				err = os.MkdirAll(targetDir, fs.ModePerm)
 				if err != nil {
 					return err
 				}
-				albumList = append(albumList, result.(model.AlbumInfo))
+				album := getAlbumInfoFromDir(targetDir)
+
+				if album == nil {
+					result, err = crawler.ParsePage(albumInfo.Url, site.AlbumInfoParser())
+					if err != nil {
+						return err
+					}
+					saveAlumInfo(targetDir, result.(model.AlbumInfo))
+					albumList = append(albumList, result.(model.AlbumInfo))
+				} else {
+					albumList = append(albumList, *album)
+
+				}
+
+
 			}
 		}
-		
+
 	}
 
-	logrus.Printf("%+v", albumList)
-	//service.PrepareDownload(,)
-	
+	//logrus.Printf("%+v", albumList)
+
+	download := service.NewDownloader()
+
+	for _, album := range albumList{
+		download.PrepareDownload(album, config.DownloadDir)
+	}
+
+	download.Wait()
 
 	return nil
+}
+
+func saveAlumInfo(dir string, album model.AlbumInfo){
+	data, err := json.Marshal(album)
+	if err != nil {
+		return
+	}
+
+	_ = os.WriteFile(path.Join(dir, "album.txt"), data, fs.ModePerm)
+}
+
+func getAlbumInfoFromDir(dir string) *model.AlbumInfo {
+	if exist, err := utils.PathExists(path.Join(dir, "album.txt")); !exist || err != nil{
+		return nil
+	}
+
+	data, err := os.ReadFile(path.Join(dir, "album.txt"))
+	if err != nil {
+		return nil
+	}
+
+	album := &model.AlbumInfo{}
+	err = json.Unmarshal(data, album)
+	if err != nil || album.Name == "" {
+		return nil
+	}
+	return album
 }
 
 func ParseConfig() (*etc.Config, error) {
