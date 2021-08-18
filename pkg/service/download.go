@@ -7,8 +7,8 @@ import (
 	"os"
 	"path"
 	"sync"
-	model "wmenjoy/music/models"
-	"wmenjoy/music/utils"
+	model2 "wmenjoy/music/pkg/models"
+	utils2 "wmenjoy/music/pkg/utils"
 )
 
 type Downloader struct {
@@ -67,15 +67,15 @@ func (d Downloader) Close() {
 	close(d.closeChan)
 }
 
-func BaseAlbumDownloadDir(baseDir string, info model.AlbumInfo) string {
+func BaseAlbumDownloadDir(baseDir string, info model2.AlbumInfo) string {
 
 	artist := "VA"
 
 	if len(info.Artist) == 1 && info.Artist[0].Name != "Various Artists" {
-		artist = utils.ValidateFileName(info.Artist[0].Name)
+		artist = utils2.ValidateFileName(info.Artist[0].Name)
 	}
 
-	dirName := utils.ValidateFileName(info.Name)
+	dirName := utils2.ValidateFileName(info.Name)
 	if info.Year != "" {
 		dirName = fmt.Sprintf("%s - %s", info.Year, dirName)
 
@@ -95,7 +95,7 @@ func BaseAlbumDownloadDir(baseDir string, info model.AlbumInfo) string {
 }
 
 // PrepareDownload 准备目录， 将下载数据发送到Channels
-func (d Downloader) PrepareDownload(info model.AlbumInfo, baseDir string) {
+func (d Downloader) PrepareDownload(info model2.AlbumInfo, baseDir string) {
 	logrus.Printf("开始入队列：%s", info.Name)
 	d.songChan <- downloadInfo{
 		object: DownloadImage{

@@ -2,13 +2,12 @@ package musify_club
 
 import (
 	"fmt"
-	"io"
-	"strings"
-	model "wmenjoy/music/models"
-	"wmenjoy/music/service"
-
 	"github.com/PuerkitoBio/goquery"
 	"github.com/sirupsen/logrus"
+	"io"
+	"strings"
+	model2 "wmenjoy/music/pkg/models"
+	service2 "wmenjoy/music/pkg/service"
 )
 
 type musifyClub struct {
@@ -16,12 +15,12 @@ type musifyClub struct {
 }
 
 func init() {
-	service.RegistSite("musify_club", NewSite)
+	service2.RegistSite("musify_club", NewSite)
 }
 
-var _ service.ISite = (*musifyClub)(nil)
+var _ service2.ISite = (*musifyClub)(nil)
 
-func NewSite() service.ISite {
+func NewSite() service2.ISite {
 	return musifyClub{
 		BaseUrl: "https://w1.musify.club%s",
 	}
@@ -54,7 +53,7 @@ func (m musifyClub) AlbumListParser() func(Body io.Reader) (interface{}, error) 
 		if divAlbumList == nil {
 			return nil, nil
 		}
-		albums := make([]model.AlbumInfo, 0)
+		albums := make([]model2.AlbumInfo, 0)
 
 		cards := divAlbumList.Find(".card.release-thumbnail")
 		if cards == nil {
@@ -68,7 +67,7 @@ func (m musifyClub) AlbumListParser() func(Body io.Reader) (interface{}, error) 
 			name := ""
 			id := ""
 			year := ""
-			genres := make([]model.GenreInfo, 0)
+			genres := make([]model2.GenreInfo, 0)
 
 			if urlAddrA != nil {
 				id, _ = urlAddrA.Attr("href")
@@ -93,7 +92,7 @@ func (m musifyClub) AlbumListParser() func(Body io.Reader) (interface{}, error) 
 			if pCardGenre != nil {
 				pCardGenre.Find("a").Each(func(i int, s *goquery.Selection) {
 					gid, _ := s.Attr("href")
-					genres = append(genres, model.GenreInfo{
+					genres = append(genres, model2.GenreInfo{
 						Id:   gid,
 						Name: s.Get(0).FirstChild.Data,
 						Url:  m.GetUrl(gid),
@@ -112,18 +111,18 @@ func (m musifyClub) AlbumListParser() func(Body io.Reader) (interface{}, error) 
 				rating = strings.TrimSpace(iRating.Parent().Text())
 			}
 
-			albums = append(albums, model.AlbumInfo{
+			albums = append(albums, model2.AlbumInfo{
 				Name:       name,
 				Id:         id,
 				Url:        url,
 				Genre:      genres,
 				Image:      image,
 				DataType:   dataType,
-				Artist:     []model.ArtistInfo{*m.parseAlbumListArtist(bodyContent)},
+				Artist:     []model2.ArtistInfo{*m.parseAlbumListArtist(bodyContent)},
 				Year:       year,
 				CreateDate: createDate,
 				Rating:     rating,
-				Category:   model.CategoryTypeMap[dataType],
+				Category:   model2.CategoryTypeMap[dataType],
 			})
 		})
 
@@ -166,12 +165,12 @@ func (m musifyClub) AlbumInfoParser() func(body io.Reader) (interface{}, error) 
 			}
 		}
 		genreInfoDiv := albumInfoDiv.Find(".genre__labels")
-		var genres []model.GenreInfo
+		var genres []model2.GenreInfo
 		if genreInfoDiv != nil {
-			genres = make([]model.GenreInfo, 0)
+			genres = make([]model2.GenreInfo, 0)
 			genreInfoDiv.Find("a").Each(func(i int, selection *goquery.Selection) {
 				id, _ := selection.Attr("href")
-				genres = append(genres, model.GenreInfo{
+				genres = append(genres, model2.GenreInfo{
 					Id:   id,
 					Name: selection.Get(0).FirstChild.Data[1:],
 					Url:  m.GetUrl(id),
@@ -185,7 +184,7 @@ func (m musifyClub) AlbumInfoParser() func(body io.Reader) (interface{}, error) 
 		}
 
 		artistDiv := albumInfoDiv.Find("ul.icon-list.album-info")
-		artists := make([]model.ArtistInfo, 0)
+		artists := make([]model2.ArtistInfo, 0)
 		createDate := ""
 		year := ""
 		if artistDiv != nil {
@@ -193,7 +192,7 @@ func (m musifyClub) AlbumInfoParser() func(body io.Reader) (interface{}, error) 
 			artistDiv.Find("a[itemprop=byArtist]").Each(func(i int, selection *goquery.Selection) {
 				id, _ := selection.Attr("href")
 
-				artists = append(artists, model.ArtistInfo{
+				artists = append(artists, model2.ArtistInfo{
 					Id:   id,
 					Name: strings.TrimSpace(selection.Text()),
 					Url:  m.GetUrl(id),
@@ -211,7 +210,7 @@ func (m musifyClub) AlbumInfoParser() func(body io.Reader) (interface{}, error) 
 		}
 
 		playListDiv := bodyContent.Find("div.playlist.playlist--hover")
-		songs := make([]model.MusicInfo, 0)
+		songs := make([]model2.MusicInfo, 0)
 		if playListDiv != nil {
 			playListDiv.Find("div.playlist__item").Each(func(i int, selection *goquery.Selection) {
 
@@ -252,7 +251,7 @@ func (m musifyClub) AlbumInfoParser() func(body io.Reader) (interface{}, error) 
 					return
 				}
 
-				songs = append(songs, model.MusicInfo{
+				songs = append(songs, model2.MusicInfo{
 					Name:        musicName,
 					Album:       albumName,
 					Artist:      musicArtist,
@@ -272,7 +271,7 @@ func (m musifyClub) AlbumInfoParser() func(body io.Reader) (interface{}, error) 
 
 		rating, _ := bodyContent.Find("select#rating").Attr("data-rating")
 
-		return model.AlbumInfo{
+		return model2.AlbumInfo{
 			Id:         id,
 			Url:        m.GetUrl(id),
 			Name:       albumName,
@@ -283,8 +282,8 @@ func (m musifyClub) AlbumInfoParser() func(body io.Reader) (interface{}, error) 
 			Year:       year,
 			Genre:      genres,
 			MusicList:  songs,
-			Category:   model.NormalCategory(category),
-			DataType:   model.TypeCategoryMap[category],
+			Category:   model2.NormalCategory(category),
+			DataType:   model2.TypeCategoryMap[category],
 			Rating:     rating,
 		}, nil
 	}
@@ -303,13 +302,13 @@ func (m musifyClub) GetUrl(path string) string {
 
 }
 
-func (m musifyClub) parseAlbumListArtist(bodyContent *goquery.Selection) *model.ArtistInfo {
+func (m musifyClub) parseAlbumListArtist(bodyContent *goquery.Selection) *model2.ArtistInfo {
 
 	breakcrumb := bodyContent.Find(".breadcrumb")
 	if breakcrumb == nil {
 		return nil
 	}
-	var artist *model.ArtistInfo
+	var artist *model2.ArtistInfo
 	breakcrumb.Find("li").Each(func(index int, selection *goquery.Selection) {
 		meta := selection.Find("meta")
 		if meta == nil {
@@ -322,7 +321,7 @@ func (m musifyClub) parseAlbumListArtist(bodyContent *goquery.Selection) *model.
 		id, _ := selection.Find("a").Attr("href")
 		text := selection.Find("span").Get(0).FirstChild.Data
 		if val == "3" {
-			artist = &model.ArtistInfo{
+			artist = &model2.ArtistInfo{
 				Id:   id,
 				Name: text,
 				Url:  m.GetUrl(id),
@@ -333,7 +332,7 @@ func (m musifyClub) parseAlbumListArtist(bodyContent *goquery.Selection) *model.
 	return artist
 }
 
-func (m musifyClub) parseAlbumInfoArtist(extractArtist []model.ArtistInfo, bodyContent *goquery.Selection) []model.ArtistInfo {
+func (m musifyClub) parseAlbumInfoArtist(extractArtist []model2.ArtistInfo, bodyContent *goquery.Selection) []model2.ArtistInfo {
 	if extractArtist != nil && len(extractArtist) > 0 {
 		return extractArtist
 	}
@@ -342,7 +341,7 @@ func (m musifyClub) parseAlbumInfoArtist(extractArtist []model.ArtistInfo, bodyC
 	if breakcrumb == nil {
 		return nil
 	}
-	artists := make([]model.ArtistInfo, 0)
+	artists := make([]model2.ArtistInfo, 0)
 	set := false
 	breakcrumb.Find("li").Each(func(index int, selection *goquery.Selection) {
 		if set {
@@ -360,14 +359,14 @@ func (m musifyClub) parseAlbumInfoArtist(extractArtist []model.ArtistInfo, bodyC
 		id, _ := selection.Find("a").Attr("href")
 		text := selection.Find("span").Get(0).FirstChild.Data
 		if val == "2" && "Artists" != text && "Исполнители" != text {
-			artists = append(artists, model.ArtistInfo{
+			artists = append(artists, model2.ArtistInfo{
 				Id:   id,
 				Name: "Various Artists",
 			})
 			set = true
 			return
 		} else if val == "3" {
-			artists = append(artists, model.ArtistInfo{
+			artists = append(artists, model2.ArtistInfo{
 				Id:   id,
 				Name: text,
 				Url:  m.GetUrl(id),
