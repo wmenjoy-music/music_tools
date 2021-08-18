@@ -2,7 +2,9 @@ package service
 
 import (
 	"io"
+	"strings"
 	model "wmenjoy/music/models"
+	"wmenjoy/music/service/musify_club"
 )
 
 type ISite interface {
@@ -13,6 +15,15 @@ type ISite interface {
 	AlbumInfoParser() func(body io.Reader) (interface{}, error)
 	NormalUrl(url string) string
 }
+
+func GetSite(url string) ISite{
+	if strings.Contains(url, "w1.musify.club") {
+		return musify_club.NewSite()
+	}
+	return nil
+}
+
+
 
 type ListOptions struct {
 	Start int

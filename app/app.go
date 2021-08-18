@@ -1,13 +1,11 @@
 package app
 
 import (
+	"github.com/sirupsen/logrus"
+	"github.com/spf13/viper"
 	"wmenjoy/music/etc"
 	model "wmenjoy/music/models"
 	"wmenjoy/music/service"
-	"wmenjoy/music/service/musify_club"
-
-	"github.com/sirupsen/logrus"
-	"github.com/spf13/viper"
 )
 
 func Download() error{
@@ -19,8 +17,8 @@ func Download() error{
 	logrus.Printf("%+v", config)
 
 	crawler := service.Crawler{}
-	site := musify_club.NewSite()
 	urls :=config.Urls
+	site := service.GetSite(urls[0])
     albumList := make([]model.AlbumInfo, 0)
 	for _, url := range urls {
 		if site.IsAlbumInfoUrl(url){
