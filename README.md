@@ -7,3 +7,13 @@
   - 音乐人
   - 音乐专辑-
     
+
+## 编译
+``` shell
+ go build -o mdm cmd/gostarter/main.go
+```
+
+## 使用
+```
+./mdm.exe -n 2 https://w1.musify.club/artist/el-michels-affair-165503/releases
+```
