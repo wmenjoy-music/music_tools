@@ -3,7 +3,7 @@ package service
 import (
 	"io"
 	"strings"
-	model2 "wmenjoy/music/pkg/models"
+	model "wmenjoy/music/pkg/models"
 )
 
 type ISite interface {
@@ -37,15 +37,15 @@ type ListOptions struct {
 
 type Lister interface {
 	// GetGenres 获取所有
-	GetGenres(options ...ListOptions) (model2.GenreInfo, error)
-	GetAlbumsByGenre(id string, options ...ListOptions) ([]model2.AlbumInfo, error)
-	GetAlbumsByYear(year string, options ...ListOptions) ([]model2.AlbumInfo, error)
-	GetAlbumsByArtist(id string, options ...ListOptions) ([]model2.AlbumInfo, error)
-	GetArtists(options ...ListOptions) (model2.ArtistInfo, error)
+	GetGenres(options ...ListOptions) (model.GenreInfo, error)
+	GetAlbumsByGenre(id string, options ...ListOptions) ([]model.AlbumInfo, error)
+	GetAlbumsByYear(year string, options ...ListOptions) ([]model.AlbumInfo, error)
+	GetAlbumsByArtist(id string, options ...ListOptions) ([]model.AlbumInfo, error)
+	GetArtists(options ...ListOptions) (model.ArtistInfo, error)
 }
 
 type Detailer interface {
-	GetAlbum(id string) (model2.AlbumInfo, error)
+	GetAlbum(id string) (model.AlbumInfo, error)
 }
 
 type DefaultDetailer struct {

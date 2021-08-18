@@ -7,10 +7,10 @@ import (
 	"io/fs"
 	"os"
 	"path"
-	etc2 "wmenjoy/music/pkg/etc"
-	model2 "wmenjoy/music/pkg/models"
-	service2 "wmenjoy/music/pkg/service"
-	utils2 "wmenjoy/music/pkg/utils"
+	"wmenjoy/music/pkg/etc"
+	"wmenjoy/music/pkg/models"
+	"wmenjoy/music/pkg/service"
+	"wmenjoy/music/pkg/utils"
 	_ "wmenjoy/music/pkg/service/musify_club"
 )
 
@@ -23,7 +23,7 @@ func Download() error {
 		config.DownloadDir = "./songs"
 	}
 
-	if exist, err := utils2.PathExists(config.DownloadDir); !exist || err != nil {
+	if exist, err := utils.PathExists(config.DownloadDir); !exist || err != nil {
 		err = os.MkdirAll(config.DownloadDir, fs.ModePerm)
 		if err != nil {
 			return err
@@ -32,18 +32,18 @@ func Download() error {
 
 	logrus.Printf("%+v", config)
 
-	crawler := service2.Crawler{}
+	crawler := service.Crawler{}
 	urls := config.Urls
-	site := service2.GetSite(urls[0])
-	albumList := make([]model2.AlbumInfo, 0)
+	site := service.GetSite(urls[0])
+	albumList := make([]model.AlbumInfo, 0)
 	for _, url := range urls {
 		if site.IsAlbumInfoUrl(url) {
 			result, err := crawler.ParsePage(url, site.AlbumInfoParser())
 			if err != nil {
 				return err
 			}
-			album := result.(model2.AlbumInfo)
-			targetDir := service2.BaseAlbumDownloadDir(config.DownloadDir, album)
+			album := result.(model.AlbumInfo)
+			targetDir := service.BaseAlbumDownloadDir(config.DownloadDir, album)
 			err = os.MkdirAll(targetDir, fs.ModePerm)
 			if err != nil {
 				return err
@@ -55,9 +55,9 @@ func Download() error {
 			if err != nil {
 				return err
 			}
-			for _, albumInfo := range result.([]model2.AlbumInfo) {
+			for _, albumInfo := range result.([]model.AlbumInfo) {
 
-				targetDir := service2.BaseAlbumDownloadDir(config.DownloadDir, albumInfo)
+				targetDir := service.BaseAlbumDownloadDir(config.DownloadDir, albumInfo)
 				err = os.MkdirAll(targetDir, fs.ModePerm)
 				if err != nil {
 					return err
@@ -69,8 +69,8 @@ func Download() error {
 					if err != nil {
 						return err
 					}
-					saveAlumInfo(targetDir, result.(model2.AlbumInfo))
-					albumList = append(albumList, result.(model2.AlbumInfo))
+					saveAlumInfo(targetDir, result.(model.AlbumInfo))
+					albumList = append(albumList, result.(model.AlbumInfo))
 				} else {
 					albumList = append(albumList, *album)
 
@@ -83,7 +83,7 @@ func Download() error {
 
 	//logrus.Printf("%+v", albumList)
 
-	download := service2.NewDownloader()
+	download := service.NewDownloader()
 
 	for _, album := range albumList {
 		download.PrepareDownload(album, config.DownloadDir)
@@ -94,7 +94,7 @@ func Download() error {
 	return nil
 }
 
-func saveAlumInfo(dir string, album model2.AlbumInfo) {
+func saveAlumInfo(dir string, album model.AlbumInfo) {
 	data, err := json.Marshal(album)
 	if err != nil {
 		return
@@ -103,8 +103,8 @@ func saveAlumInfo(dir string, album model2.AlbumInfo) {
 	_ = os.WriteFile(path.Join(dir, "album.txt"), data, fs.ModePerm)
 }
 
-func getAlbumInfoFromDir(dir string) *model2.AlbumInfo {
-	if exist, err := utils2.PathExists(path.Join(dir, "album.txt")); !exist || err != nil {
+func getAlbumInfoFromDir(dir string) *model.AlbumInfo {
+	if exist, err := utils.PathExists(path.Join(dir, "album.txt")); !exist || err != nil {
 		return nil
 	}
 
@@ -113,7 +113,7 @@ func getAlbumInfoFromDir(dir string) *model2.AlbumInfo {
 		return nil
 	}
 
-	album := &model2.AlbumInfo{}
+	album := &model.AlbumInfo{}
 	err = json.Unmarshal(data, album)
 	if err != nil || album.Name == "" {
 		return nil
@@ -121,8 +121,8 @@ func getAlbumInfoFromDir(dir string) *model2.AlbumInfo {
 	return album
 }
 
-func ParseConfig() (*etc2.Config, error) {
-	config := &etc2.Config{}
+func ParseConfig() (*etc.Config, error) {
+	config := &etc.Config{}
 
 	err := viper.Unmarshal(config)
 	if err != nil {

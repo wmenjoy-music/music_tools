@@ -3,7 +3,7 @@ package musify_club
 import (
 	"os"
 	"testing"
-	model2 "wmenjoy/music/pkg/models"
+	model "wmenjoy/music/pkg/models"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -19,7 +19,7 @@ func TestMusifyClub_AlbumInfoParser(t *testing.T) {
 	//p, err := crawler.ParsePage("https://w1.musify.club/release/medlyaki-shkolnih-diskotek-2021-1484710", )
 
 	assert.Nil(t, err)
-	assert.Equal(t, "Медляки Школьных Дискотек (2021)", p.(model2.AlbumInfo).FullName)
+	assert.Equal(t, "Медляки Школьных Дискотек (2021)", p.(model.AlbumInfo).FullName)
 }
 
 func TestMusifyClub_AlbumListParser(t *testing.T) {
@@ -28,5 +28,5 @@ func TestMusifyClub_AlbumListParser(t *testing.T) {
 	assert.Nil(t, err)
 	p, err := musifyClub.AlbumListParser()(file)
 	assert.Nil(t, err)
-	assert.Equal(t, "Медляки Школьных Дискотек (2021)", p.(model2.AlbumInfo).FullName)
+	assert.Equal(t, "Медляки Школьных Дискотек (2021)", p.(model.AlbumInfo).FullName)
 }

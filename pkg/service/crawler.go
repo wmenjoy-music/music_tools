@@ -12,7 +12,7 @@ import (
 	"os"
 	"path"
 	"time"
-	utils2 "wmenjoy/music/pkg/utils"
+	"wmenjoy/music/pkg/utils"
 )
 
 type Options struct {
@@ -106,7 +106,7 @@ func (c Crawler) Download(obj IDownloadObject, downloadDir string) error {
 
 	var out io.Writer
 
-	if val, err := utils2.PathExists(path.Join(downloadDir, fileName)); val && err == nil {
+	if val, err := utils.PathExists(path.Join(downloadDir, fileName)); val && err == nil {
 		return nil
 	}
 
