@@ -11,7 +11,7 @@ import (
 	model2 "wmenjoy/music/pkg/models"
 	service2 "wmenjoy/music/pkg/service"
 	utils2 "wmenjoy/music/pkg/utils"
-	_ "wmenjoy/music/service/musify_club"
+	_ "wmenjoy/music/pkg/service/musify_club"
 )
 
 func Download() error {
