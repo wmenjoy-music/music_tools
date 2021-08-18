@@ -25,13 +25,12 @@ var (
 		Long:    `音乐下载工具`,
 		Version: "0.1.0",
 		Args: func(cmd *cobra.Command, args []string) error {
-			if len(args) <= 0{
+			if len(args) <= 0 {
 				if viper.Get("url") == "" {
 					return errors.New("请指定待抓取的网页")
 				}
 				return nil
 			}
-
 
 			viper.Set("urls", args)
 
@@ -65,11 +64,11 @@ func MainErr() error {
 		"Specify an alternate cluster Toml file")
 	rootCmd.PersistentFlags().StringVarP(&configPath, "configPath", "p", ".",
 		"Specify an alternate config location")
-	ViperIntBindAndSetP(rootCmd,"ThreadNum", "n", 1,
+	ViperIntBindAndSetP(rootCmd, "ThreadNum", "n", 1,
 		"线程数量")
-	ViperStringBindAndSetP(rootCmd,"url", "u", "",
+	ViperStringBindAndSetP(rootCmd, "url", "u", "",
 		"访问url")
-	ViperStringBindAndSetP(rootCmd,"downloadDir", "d", "",
+	ViperStringBindAndSetP(rootCmd, "downloadDir", "d", "",
 		"下载")
 
 	return rootCmd.Execute()

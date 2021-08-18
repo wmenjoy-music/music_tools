@@ -14,8 +14,8 @@ import (
 	"wmenjoy/music/utils"
 )
 
-func Download() error{
-	config, err:= ParseConfig()
+func Download() error {
+	config, err := ParseConfig()
 	if err != nil {
 		return err
 	}
@@ -23,7 +23,7 @@ func Download() error{
 		config.DownloadDir = "./songs"
 	}
 
-	if exist, err := utils.PathExists(config.DownloadDir); !exist || err != nil{
+	if exist, err := utils.PathExists(config.DownloadDir); !exist || err != nil {
 		err = os.MkdirAll(config.DownloadDir, fs.ModePerm)
 		if err != nil {
 			return err
@@ -33,11 +33,11 @@ func Download() error{
 	logrus.Printf("%+v", config)
 
 	crawler := service.Crawler{}
-	urls :=config.Urls
+	urls := config.Urls
 	site := service.GetSite(urls[0])
-    albumList := make([]model.AlbumInfo, 0)
+	albumList := make([]model.AlbumInfo, 0)
 	for _, url := range urls {
-		if site.IsAlbumInfoUrl(url){
+		if site.IsAlbumInfoUrl(url) {
 			result, err := crawler.ParsePage(url, site.AlbumInfoParser())
 			if err != nil {
 				return err
@@ -76,7 +76,6 @@ func Download() error{
 
 				}
 
-
 			}
 		}
 
@@ -86,7 +85,7 @@ func Download() error{
 
 	download := service.NewDownloader()
 
-	for _, album := range albumList{
+	for _, album := range albumList {
 		download.PrepareDownload(album, config.DownloadDir)
 	}
 
@@ -95,7 +94,7 @@ func Download() error{
 	return nil
 }
 
-func saveAlumInfo(dir string, album model.AlbumInfo){
+func saveAlumInfo(dir string, album model.AlbumInfo) {
 	data, err := json.Marshal(album)
 	if err != nil {
 		return
@@ -105,7 +104,7 @@ func saveAlumInfo(dir string, album model.AlbumInfo){
 }
 
 func getAlbumInfoFromDir(dir string) *model.AlbumInfo {
-	if exist, err := utils.PathExists(path.Join(dir, "album.txt")); !exist || err != nil{
+	if exist, err := utils.PathExists(path.Join(dir, "album.txt")); !exist || err != nil {
 		return nil
 	}
 

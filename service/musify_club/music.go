@@ -15,7 +15,7 @@ type musifyClub struct {
 	BaseUrl string
 }
 
-func init(){
+func init() {
 	service.RegistSite("musify_club", NewSite)
 }
 
@@ -194,11 +194,10 @@ func (m musifyClub) AlbumInfoParser() func(body io.Reader) (interface{}, error) 
 				id, _ := selection.Attr("href")
 
 				artists = append(artists, model.ArtistInfo{
-						Id:   id,
-						Name: strings.TrimSpace(selection.Text()),
-						Url:  m.GetUrl(id),
+					Id:   id,
+					Name: strings.TrimSpace(selection.Text()),
+					Url:  m.GetUrl(id),
 				})
-
 
 			})
 

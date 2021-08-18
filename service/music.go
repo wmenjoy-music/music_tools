@@ -19,18 +19,16 @@ type SiteFactory func() ISite
 
 var siteRegistry map[string]SiteFactory = make(map[string]SiteFactory, 1)
 
-func RegistSite(name string, factory SiteFactory){
+func RegistSite(name string, factory SiteFactory) {
 	siteRegistry[name] = factory
 }
 
-func GetSite(url string) ISite{
+func GetSite(url string) ISite {
 	if strings.Contains(url, "w1.musify.club") {
 		return siteRegistry["musify_club"]()
 	}
 	return nil
 }
-
-
 
 type ListOptions struct {
 	Start int
@@ -45,8 +43,6 @@ type Lister interface {
 	GetAlbumsByArtist(id string, options ...ListOptions) ([]model.AlbumInfo, error)
 	GetArtists(options ...ListOptions) (model.ArtistInfo, error)
 }
-
-
 
 type Detailer interface {
 	GetAlbum(id string) (model.AlbumInfo, error)

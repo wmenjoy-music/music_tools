@@ -9,17 +9,17 @@ type ArtistInfo struct {
 }
 
 type MusicInfo struct {
-	Name      string
-	Id        string
-	Url       string
-	Album     string
-	Artist    string
-	Postion   string
-	DataTitle string
-	DownloadUrl  string
-	Duration   string
-	Stars     string
-	BitRate    string
+	Name        string
+	Id          string
+	Url         string
+	Album       string
+	Artist      string
+	Postion     string
+	DataTitle   string
+	DownloadUrl string
+	Duration    string
+	Stars       string
+	BitRate     string
 }
 
 type AlbumInfo struct {
@@ -96,6 +96,5 @@ func init() {
 	TypeCategoryMap["Неофициальный сборник"] = "13"
 	TypeCategoryMap["OST"] = "14"
 	TypeCategoryMap["Саундтрек"] = "14"
-
 
 }

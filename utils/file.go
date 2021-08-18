@@ -7,8 +7,6 @@ import (
 	"strings"
 )
 
-
-
 // PathExists 该项文件是否存在，通过读取上层目录, 来获取文件是否存在， os.Stat 读取文件，不区分大小写
 func PathExists(file string) (bool, error) {
 

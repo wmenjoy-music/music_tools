@@ -14,11 +14,12 @@ import (
 	"time"
 	"wmenjoy/music/utils"
 )
+
 type Options struct {
-	ShowProgress bool
-	Debug        bool
+	ShowProgress  bool
+	Debug         bool
 	DoNotDownload bool
-	FileName     string
+	FileName      string
 }
 
 type IDownloadObject interface {
@@ -27,14 +28,13 @@ type IDownloadObject interface {
 	getFileName() string
 }
 
-
 type DownloadImage struct {
-	Name  string
-	FileType string
+	Name        string
+	FileType    string
 	DownloadUrl string
 }
-var _ IDownloadObject = (*DownloadImage)(nil)
 
+var _ IDownloadObject = (*DownloadImage)(nil)
 
 func (obj DownloadImage) getFileName() string {
 	return fmt.Sprintf("%s.%s", obj.Name, obj.FileType)
@@ -46,11 +46,11 @@ func (obj DownloadImage) getDownloadUrl() string {
 
 type DownloadMusic struct {
 	IDownloadObject
-	index string
-	Name  string
-	Artist string
-	Category  string
-	FileType  string
+	index       string
+	Name        string
+	Artist      string
+	Category    string
+	FileType    string
 	DownloadUrl string
 }
 
@@ -65,13 +65,13 @@ func (obj DownloadMusic) getDownloadUrl() string {
 }
 
 type Crawler struct {
-	proxy     string
-	Retry	  int
-	Options   Options
+	proxy   string
+	Retry   int
+	Options Options
 }
 
 // ParsePage 使用get方法获取页面
-func (c Crawler) ParsePage(url string, objectConsumer func(Body io.Reader)(interface{}, error))(interface{}, error){
+func (c Crawler) ParsePage(url string, objectConsumer func(Body io.Reader) (interface{}, error)) (interface{}, error) {
 	rand := time.Duration(rand.Intn(1000))
 	time.Sleep(rand * time.Millisecond)
 	res, err := http.Get(url)
@@ -85,7 +85,7 @@ func (c Crawler) ParsePage(url string, objectConsumer func(Body io.Reader)(inter
 	return objectConsumer(res.Body)
 }
 
-func (c Crawler) Download(obj IDownloadObject, downloadDir string) (error) {
+func (c Crawler) Download(obj IDownloadObject, downloadDir string) error {
 	if obj == nil {
 		return errors.New("不合法的下载对象")
 	}
@@ -106,12 +106,11 @@ func (c Crawler) Download(obj IDownloadObject, downloadDir string) (error) {
 
 	var out io.Writer
 
-
-	if val, err := utils.PathExists(path.Join(downloadDir, fileName)); val && err == nil{
+	if val, err := utils.PathExists(path.Join(downloadDir, fileName)); val && err == nil {
 		return nil
 	}
 
-	f, err := os.Create(path.Join(downloadDir, fileName + ".bak"))
+	f, err := os.Create(path.Join(downloadDir, fileName+".bak"))
 	defer func(f *os.File) {
 		err := f.Close()
 		if err != nil {
@@ -147,7 +146,7 @@ func (c Crawler) Download(obj IDownloadObject, downloadDir string) (error) {
 		return err
 	}
 
-	err = os.Rename(path.Join(downloadDir, fileName + ".bak"), path.Join(downloadDir, fileName))
+	err = os.Rename(path.Join(downloadDir, fileName+".bak"), path.Join(downloadDir, fileName))
 
 	logrus.Printf("下载完成文件：%s", fileName)
 	return err

@@ -11,12 +11,12 @@ import (
 	"wmenjoy/music/utils"
 )
 
-type Downloader struct{
-	songChan chan downloadInfo
+type Downloader struct {
+	songChan  chan downloadInfo
 	closeChan chan struct{}
-	sigChan chan os.Signal
-	crawler Crawler
-	wg  sync.WaitGroup
+	sigChan   chan os.Signal
+	crawler   Crawler
+	wg        sync.WaitGroup
 }
 
 func NewDownloader() Downloader {
@@ -31,9 +31,9 @@ func NewDownloader() Downloader {
 	}
 
 	download := Downloader{
-		songChan: make(chan downloadInfo, channelLength),
+		songChan:  make(chan downloadInfo, channelLength),
 		closeChan: make(chan struct{}, 1),
-		sigChan: make(chan os.Signal),
+		sigChan:   make(chan os.Signal),
 		crawler: Crawler{
 			Retry: retry,
 			Options: Options{
@@ -46,25 +46,23 @@ func NewDownloader() Downloader {
 	return download
 }
 
-
 type downloadInfo struct {
-	object IDownloadObject
-	downloadDir  string
+	object      IDownloadObject
+	downloadDir string
 }
 
-
-func(d *Downloader) Start(threadNum int){
+func (d *Downloader) Start(threadNum int) {
 	d.wg.Add(threadNum)
-	for i :=0; i < threadNum; i++{
+	for i := 0; i < threadNum; i++ {
 		go d.Run(d.wg)
 	}
 }
 
-func (d *Downloader) Wait(){
+func (d *Downloader) Wait() {
 	d.wg.Wait()
 }
 
-func(d Downloader)  Close(){
+func (d Downloader) Close() {
 	close(d.songChan)
 	close(d.closeChan)
 }
@@ -73,17 +71,17 @@ func BaseAlbumDownloadDir(baseDir string, info model.AlbumInfo) string {
 
 	artist := "VA"
 
-	if len(info.Artist)  == 1 && info.Artist[0].Name != "Various Artists" {
+	if len(info.Artist) == 1 && info.Artist[0].Name != "Various Artists" {
 		artist = utils.ValidateFileName(info.Artist[0].Name)
 	}
 
 	dirName := utils.ValidateFileName(info.Name)
-	if info.Year != ""  {
+	if info.Year != "" {
 		dirName = fmt.Sprintf("%s - %s", info.Year, dirName)
 
 	}
 	if viper.GetBool("useCategory") {
-		if viper.GetBool("mergeEPAndSingle"){
+		if viper.GetBool("mergeEPAndSingle") {
 			if info.Category == "EP" || info.Category == "Single" {
 				return path.Join(baseDir, artist, dirName, "Singles And EPs")
 			}
@@ -92,7 +90,6 @@ func BaseAlbumDownloadDir(baseDir string, info model.AlbumInfo) string {
 
 		return path.Join(baseDir, artist, dirName, info.Category)
 	}
-
 
 	return path.Join(baseDir, artist, dirName)
 }
@@ -103,24 +100,24 @@ func (d Downloader) PrepareDownload(info model.AlbumInfo, baseDir string) {
 	d.songChan <- downloadInfo{
 		object: DownloadImage{
 			DownloadUrl: info.Image,
-			FileType: "jpg",
-			Name: "cover",
+			FileType:    "jpg",
+			Name:        "cover",
 		},
 		downloadDir: BaseAlbumDownloadDir(baseDir, info),
 	}
 
-	for _, song := range info.MusicList{
-		if song.DownloadUrl == ""{
+	for _, song := range info.MusicList {
+		if song.DownloadUrl == "" {
 			continue
 		}
 		d.songChan <- downloadInfo{
 			object: DownloadMusic{
 				DownloadUrl: song.DownloadUrl,
-				FileType: "mp3",
-				Name: song.Name,
-				Artist: song.Artist,
-				index: song.Postion,
-				Category: info.Category,
+				FileType:    "mp3",
+				Name:        song.Name,
+				Artist:      song.Artist,
+				index:       song.Postion,
+				Category:    info.Category,
 			},
 			downloadDir: BaseAlbumDownloadDir(baseDir, info),
 		}
@@ -128,7 +125,7 @@ func (d Downloader) PrepareDownload(info model.AlbumInfo, baseDir string) {
 	logrus.Printf("入队列完成：%s", info.Name)
 }
 
-func (d Downloader) Run(group sync.WaitGroup){
+func (d Downloader) Run(group sync.WaitGroup) {
 	logrus.Printf("线程启动")
 	for {
 		select {
@@ -148,7 +145,7 @@ func (d Downloader) Run(group sync.WaitGroup){
 			}
 			return
 		case sig := <-d.sigChan:
-			fmt.Println("接受到来自系统的信号：",sig.String())
+			fmt.Println("接受到来自系统的信号：", sig.String())
 			d.Close()
 		}
 	}
