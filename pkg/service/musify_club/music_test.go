@@ -3,7 +3,7 @@ package musify_club
 import (
 	"os"
 	"testing"
-	model "wmenjoy/music/pkg/models"
+	"wmenjoy/music/pkg/model"
 
 	"github.com/stretchr/testify/assert"
 )

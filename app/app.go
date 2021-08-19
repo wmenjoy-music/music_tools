@@ -8,10 +8,10 @@ import (
 	"os"
 	"path"
 	"wmenjoy/music/pkg/etc"
-	"wmenjoy/music/pkg/models"
+	"wmenjoy/music/pkg/model"
 	"wmenjoy/music/pkg/service"
-	"wmenjoy/music/pkg/utils"
 	_ "wmenjoy/music/pkg/service/musify_club"
+	"wmenjoy/music/pkg/utils"
 )
 
 func Download() error {

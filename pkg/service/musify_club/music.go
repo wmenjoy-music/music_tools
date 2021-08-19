@@ -6,8 +6,8 @@ import (
 	"github.com/sirupsen/logrus"
 	"io"
 	"strings"
-	model "wmenjoy/music/pkg/models"
-	service "wmenjoy/music/pkg/service"
+	"wmenjoy/music/pkg/model"
+	"wmenjoy/music/pkg/service"
 )
 
 type musifyClub struct {

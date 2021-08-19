@@ -3,7 +3,7 @@ package service
 import (
 	"io"
 	"strings"
-	model "wmenjoy/music/pkg/models"
+	"wmenjoy/music/pkg/model"
 )
 
 type ISite interface {

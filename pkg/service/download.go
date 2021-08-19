@@ -6,7 +6,7 @@ import (
 	"os"
 	"path"
 	"sync"
-	model "wmenjoy/music/pkg/models"
+	"wmenjoy/music/pkg/model"
 	"wmenjoy/music/pkg/utils"
 
 	"github.com/sirupsen/logrus"
