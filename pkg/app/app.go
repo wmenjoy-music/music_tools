@@ -2,8 +2,6 @@ package app
 
 import (
 	"encoding/json"
-	"github.com/sirupsen/logrus"
-	"github.com/spf13/viper"
 	"io/fs"
 	"os"
 	"path"
@@ -12,6 +10,9 @@ import (
 	"wmenjoy/music/pkg/service"
 	_ "wmenjoy/music/pkg/service/musify_club"
 	"wmenjoy/music/pkg/utils"
+
+	"github.com/sirupsen/logrus"
+	"github.com/spf13/viper"
 )
 
 func Download() error {
@@ -57,7 +58,7 @@ func Download() error {
 			}
 			for _, albumInfo := range result.([]model.AlbumInfo) {
 				//增加过滤功能，针对某种类型的专辑不下载
-				if len(config.FilterDateTypes) > 0 && utils.InArray(albumInfo.DataType, config.FilterDateTypes){
+				if len(config.FilterDateTypes) > 0 && utils.InArray(albumInfo.DataType, config.FilterDateTypes) {
 					continue
 				}
 
@@ -94,7 +95,7 @@ func Download() error {
 		download.PrepareDownload(album, config.DownloadDir)
 	}
 
-//	download.CloseDataChannel()
+	download.CloseDataChannel()
 
 	download.Wait()
 

@@ -2,26 +2,27 @@ package service
 
 import (
 	"fmt"
-	"github.com/sirupsen/logrus"
-	"github.com/spf13/viper"
-	"github.com/vbauerster/mpb/v7"
 	"io/fs"
 	"os"
 	"path"
 	"sync"
 	"wmenjoy/music/pkg/model"
 	"wmenjoy/music/pkg/utils"
+
+	"github.com/sirupsen/logrus"
+	"github.com/spf13/viper"
+	"github.com/vbauerster/mpb/v7"
 )
 
 type Downloader struct {
-	songChan  chan downloadInfo
-	closeChan chan struct{}
-	sigChan   chan os.Signal
-	crawler   Crawler
-	wg        *sync.WaitGroup
-	bars      []*mpb.Bar
-	barWaitGroup  []*sync.WaitGroup
-	doneWg    *sync.WaitGroup
+	songChan     chan downloadInfo
+	closeChan    chan struct{}
+	sigChan      chan os.Signal
+	crawler      Crawler
+	wg           *sync.WaitGroup
+	bars         []*mpb.Bar
+	barWaitGroup []*sync.WaitGroup
+	doneWg       *sync.WaitGroup
 }
 
 func NewDownloader() *Downloader {
@@ -38,7 +39,7 @@ func NewDownloader() *Downloader {
 	threadNum := viper.GetInt("threadNum")
 	doneWg := new(sync.WaitGroup)
 	barWaitGroup := make([]*sync.WaitGroup, threadNum)
-	for i := 0; i < threadNum; i++{
+	for i := 0; i < threadNum; i++ {
 		barWaitGroup[i] = new(sync.WaitGroup)
 	}
 
@@ -53,9 +54,9 @@ func NewDownloader() *Downloader {
 			},
 			ProcessBars: mpb.New(),
 		},
-		wg: &sync.WaitGroup{},
-		doneWg: doneWg,
-		bars: make([]*mpb.Bar, threadNum),
+		wg:           &sync.WaitGroup{},
+		doneWg:       doneWg,
+		bars:         make([]*mpb.Bar, threadNum),
 		barWaitGroup: barWaitGroup,
 	}
 	//d.Start(viper.GetInt("threadNum"))
@@ -75,7 +76,6 @@ func (d *Downloader) Start(threadNum int) {
 		go d.Run(d.wg)
 	}
 
-
 }
 
 func (d *Downloader) CloseDataChannel() {
@@ -87,7 +87,7 @@ func (d *Downloader) Wait() {
 	d.wg.Wait()
 }
 
-func (d* Downloader) Close() {
+func (d *Downloader) Close() {
 	close(d.songChan)
 	close(d.closeChan)
 }
@@ -154,9 +154,11 @@ func (d *Downloader) PrepareDownload(info model.AlbumInfo, baseDir string) {
 }
 
 func (d *Downloader) Run(group *sync.WaitGroup) {
-	logrus.Printf("线程启动=>")
 	context := NewContext(d.bars, d.barWaitGroup)
-	defer group.Done()
+	defer func() {
+		logrus.Printf("程序退出===》")
+		group.Done()
+	}()
 	for {
 		select {
 		case x, ok := <-d.songChan:
@@ -177,10 +179,9 @@ func (d *Downloader) Run(group *sync.WaitGroup) {
 		}
 	}
 }
-func (d *Downloader) process(x downloadInfo, contexts ...*DownloadContext){
+func (d *Downloader) process(x downloadInfo, contexts ...*DownloadContext) {
 	err := d.crawler.Download(x.object, x.downloadDir, contexts...)
 	if err != nil {
 		logrus.Printf("下载文件:%s 错误：%s", x.object.getFileName(), err.Error())
 	}
 }
-

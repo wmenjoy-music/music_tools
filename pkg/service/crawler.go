@@ -3,9 +3,6 @@ package service
 import (
 	"errors"
 	"fmt"
-	"github.com/sirupsen/logrus"
-	"github.com/vbauerster/mpb/v7"
-	"github.com/vbauerster/mpb/v7/decor"
 	"io"
 	"math/rand"
 	"net/http"
@@ -16,6 +13,10 @@ import (
 	"sync"
 	"time"
 	"wmenjoy/music/pkg/utils"
+
+	"github.com/sirupsen/logrus"
+	"github.com/vbauerster/mpb/v7"
+	"github.com/vbauerster/mpb/v7/decor"
 )
 
 type Options struct {
@@ -68,16 +69,16 @@ func (obj DownloadMusic) getDownloadUrl() string {
 }
 
 type Crawler struct {
-	proxy   string
-	Retry   int
-	Options Options
+	proxy       string
+	Retry       int
+	Options     Options
 	ProcessBars *mpb.Progress
-	count   int
-	bars    []*mpb.Bar
+	count       int
+	bars        []*mpb.Bar
 }
 
 // ParsePage 使用get方法获取页面
-func (c* Crawler) ParsePage(url string, objectConsumer func(Body io.Reader) (interface{}, error)) (interface{}, error) {
+func (c *Crawler) ParsePage(url string, objectConsumer func(Body io.Reader) (interface{}, error)) (interface{}, error) {
 	rand := time.Duration(rand.Intn(2))
 	time.Sleep(rand * time.Millisecond)
 	res, err := http.Get(url)
@@ -91,8 +92,8 @@ func (c* Crawler) ParsePage(url string, objectConsumer func(Body io.Reader) (int
 	return objectConsumer(res.Body)
 }
 
-func (c* Crawler) Download(obj IDownloadObject, downloadDir string, contexts ...*DownloadContext) error{
-	for count := 0; count <= c.Retry; count ++ {
+func (c *Crawler) Download(obj IDownloadObject, downloadDir string, contexts ...*DownloadContext) error {
+	for count := 0; count <= c.Retry; count++ {
 		err := c.__download(obj, downloadDir, contexts...)
 		if err == nil {
 			return nil
@@ -100,26 +101,25 @@ func (c* Crawler) Download(obj IDownloadObject, downloadDir string, contexts ...
 		logrus.Printf("下载文件:%s 错误：%s", obj.getFileName(), err.Error())
 	}
 
-
 	return nil
 }
 
 type barWriter struct {
 	io.Writer
-	bar *mpb.Bar
-	start  time.Time
+	bar   *mpb.Bar
+	start time.Time
 	count int
 }
+
 // Write implement io.Writer
 func (p *barWriter) Write(b []byte) (n int, err error) {
 	n = len(b)
-	p.count +=n
+	p.count += n
 
 	p.bar.IncrBy(n)
 	p.bar.DecoratorEwmaUpdate(time.Since(p.start))
 	return
 }
-
 
 func (p *barWriter) Close() (err error) {
 	return
@@ -127,21 +127,20 @@ func (p *barWriter) Close() (err error) {
 
 type DownloadContext struct {
 	Index int
-	Bars []*mpb.Bar
+	Bars  []*mpb.Bar
 }
 
 var count = -1
 
 var Bars []*mpb.Bar
 
-func NewContext(bars []*mpb.Bar, barWaitGroup []*sync.WaitGroup) *DownloadContext{
-	count ++
+func NewContext(bars []*mpb.Bar, barWaitGroup []*sync.WaitGroup) *DownloadContext {
+	count++
 	return &DownloadContext{
 		Index: count,
-		Bars: bars,
+		Bars:  bars,
 	}
 }
-
 
 func (c *Crawler) __download(obj IDownloadObject, downloadDir string, contexts ...*DownloadContext) error {
 	if obj == nil {
@@ -193,17 +192,16 @@ func (c *Crawler) __download(obj IDownloadObject, downloadDir string, contexts .
 	out = f
 
 	if c.Options.ShowProgress {
-		job := fileName[strings.Index(fileName, "-") + 2:]
+		job := fileName[strings.Index(fileName, "-")+2:]
 		task := "downloading"
 		var bar *mpb.Bar
 		if len(contexts) == 0 || contexts[0].Bars[contexts[0].Index] == nil {
 			if len(contexts) > 0 {
-				logrus.Printf("----->%d", contexts[0].Index)
 				task = task + "-" + strconv.Itoa(contexts[0].Index)
 			}
 
 			bar = c.ProcessBars.AddBar(length,
-			//	mpb.BarFillerClearOnComplete(),
+				//	mpb.BarFillerClearOnComplete(),
 				mpb.BarRemoveOnComplete(),
 				mpb.PrependDecorators(
 					// simple name decorator
@@ -217,15 +215,13 @@ func (c *Crawler) __download(obj IDownloadObject, downloadDir string, contexts .
 					// replace ETA decorator with "done" message, OnComplete event
 					decor.OnComplete(
 						// ETA decorator with ewma age of 60
-						decor.EwmaETA(decor.ET_STYLE_GO, 60, decor.WCSyncWidth), "done",
-					),
+						decor.EwmaETA(decor.ET_STYLE_GO, 60, decor.WCSyncWidth), "done"),
 				),
 			)
 			if len(contexts) > 0 {
 				contexts[0].Bars[contexts[0].Index] = bar
 			}
 		} else {
-			logrus.Printf("======>%d", contexts[0].Index)
 			if len(contexts) > 0 {
 				logrus.Printf("----->%d", contexts[0].Index)
 				task = task + "-" + strconv.Itoa(contexts[0].Index)
@@ -233,7 +229,7 @@ func (c *Crawler) __download(obj IDownloadObject, downloadDir string, contexts .
 			bar = c.ProcessBars.AddBar(length,
 				//mpb.BarQueueAfter(contexts[0].Bars[contexts[0].Index]),
 				mpb.BarRemoveOnComplete(),
-			//	mpb.BarFillerClearOnComplete(),
+				//	mpb.BarFillerClearOnComplete(),
 				mpb.PrependDecorators(
 					// simple name decorator
 					decor.Name(task, decor.WC{W: len(task) + 1, C: decor.DidentRight}),
@@ -254,21 +250,21 @@ func (c *Crawler) __download(obj IDownloadObject, downloadDir string, contexts .
 		}
 		/*
 
-		bar := progressbar.NewOptions64(length,
-			progressbar.OptionSetWriter(ansi.NewAnsiStdout()),
-			progressbar.OptionEnableColorCodes(true),
-			progressbar.OptionShowBytes(true),
-			progressbar.OptionSetWidth(15),
-			progressbar.OptionSetDescription(fileName),
-			progressbar.OptionSetTheme(progressbar.Theme{
-				Saucer:        "[green]=[reset]",
-				SaucerHead:    "[green]>[reset]",
-				SaucerPadding: " ",
-				BarStart:      "[",
-				BarEnd:        "]",
-			}))*/
+			bar := progressbar.NewOptions64(length,
+				progressbar.OptionSetWriter(ansi.NewAnsiStdout()),
+				progressbar.OptionEnableColorCodes(true),
+				progressbar.OptionShowBytes(true),
+				progressbar.OptionSetWidth(15),
+				progressbar.OptionSetDescription(fileName),
+				progressbar.OptionSetTheme(progressbar.Theme{
+					Saucer:        "[green]=[reset]",
+					SaucerHead:    "[green]>[reset]",
+					SaucerPadding: " ",
+					BarStart:      "[",
+					BarEnd:        "]",
+				}))*/
 		out = io.MultiWriter(out, &barWriter{
-			bar: bar,
+			bar:   bar,
 			start: time.Now(),
 		})
 	}
