@@ -94,7 +94,7 @@ func Download() error {
 		download.PrepareDownload(album, config.DownloadDir)
 	}
 
-	download.CloseDataChannel()
+//	download.CloseDataChannel()
 
 	download.Wait()
 

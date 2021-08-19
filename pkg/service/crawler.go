@@ -3,17 +3,19 @@ package service
 import (
 	"errors"
 	"fmt"
+	"github.com/sirupsen/logrus"
+	"github.com/vbauerster/mpb/v7"
+	"github.com/vbauerster/mpb/v7/decor"
 	"io"
 	"math/rand"
 	"net/http"
 	"os"
 	"path"
+	"strconv"
+	"strings"
+	"sync"
 	"time"
 	"wmenjoy/music/pkg/utils"
-
-	ansi "github.com/k0kubun/go-ansi"
-	"github.com/schollz/progressbar/v3"
-	"github.com/sirupsen/logrus"
 )
 
 type Options struct {
@@ -69,10 +71,13 @@ type Crawler struct {
 	proxy   string
 	Retry   int
 	Options Options
+	ProcessBars *mpb.Progress
+	count   int
+	bars    []*mpb.Bar
 }
 
 // ParsePage 使用get方法获取页面
-func (c Crawler) ParsePage(url string, objectConsumer func(Body io.Reader) (interface{}, error)) (interface{}, error) {
+func (c* Crawler) ParsePage(url string, objectConsumer func(Body io.Reader) (interface{}, error)) (interface{}, error) {
 	rand := time.Duration(rand.Intn(2))
 	time.Sleep(rand * time.Millisecond)
 	res, err := http.Get(url)
@@ -86,9 +91,9 @@ func (c Crawler) ParsePage(url string, objectConsumer func(Body io.Reader) (inte
 	return objectConsumer(res.Body)
 }
 
-func (c Crawler) Download(obj IDownloadObject, downloadDir string) error{
+func (c* Crawler) Download(obj IDownloadObject, downloadDir string, contexts ...*DownloadContext) error{
 	for count := 0; count <= c.Retry; count ++ {
-		err := c.__download(obj, downloadDir)
+		err := c.__download(obj, downloadDir, contexts...)
 		if err == nil {
 			return nil
 		}
@@ -99,7 +104,46 @@ func (c Crawler) Download(obj IDownloadObject, downloadDir string) error{
 	return nil
 }
 
-func (c Crawler) __download(obj IDownloadObject, downloadDir string) error {
+type barWriter struct {
+	io.Writer
+	bar *mpb.Bar
+	start  time.Time
+	count int
+}
+// Write implement io.Writer
+func (p *barWriter) Write(b []byte) (n int, err error) {
+	n = len(b)
+	p.count +=n
+
+	p.bar.IncrBy(n)
+	p.bar.DecoratorEwmaUpdate(time.Since(p.start))
+	return
+}
+
+
+func (p *barWriter) Close() (err error) {
+	return
+}
+
+type DownloadContext struct {
+	Index int
+	Bars []*mpb.Bar
+}
+
+var count = -1
+
+var Bars []*mpb.Bar
+
+func NewContext(bars []*mpb.Bar, barWaitGroup []*sync.WaitGroup) *DownloadContext{
+	count ++
+	return &DownloadContext{
+		Index: count,
+		Bars: bars,
+	}
+}
+
+
+func (c *Crawler) __download(obj IDownloadObject, downloadDir string, contexts ...*DownloadContext) error {
 	if obj == nil {
 		return errors.New("不合法的下载对象")
 	}
@@ -136,7 +180,11 @@ func (c Crawler) __download(obj IDownloadObject, downloadDir string) error {
 			logrus.Printf("下载完成文件：%s 失败:%s", fileName, err.Error())
 		}
 
+		if len(contexts) > 0 {
+
+		}
 		logrus.Printf("下载完成文件：%s", fileName)
+
 	}(f)
 
 	if err != nil {
@@ -145,6 +193,67 @@ func (c Crawler) __download(obj IDownloadObject, downloadDir string) error {
 	out = f
 
 	if c.Options.ShowProgress {
+		job := fileName[strings.Index(fileName, "-") + 2:]
+		task := "downloading"
+		var bar *mpb.Bar
+		if len(contexts) == 0 || contexts[0].Bars[contexts[0].Index] == nil {
+			if len(contexts) > 0 {
+				logrus.Printf("----->%d", contexts[0].Index)
+				task = task + "-" + strconv.Itoa(contexts[0].Index)
+			}
+
+			bar = c.ProcessBars.AddBar(length,
+			//	mpb.BarFillerClearOnComplete(),
+				mpb.BarRemoveOnComplete(),
+				mpb.PrependDecorators(
+					// simple name decorator
+					decor.Name(task, decor.WC{W: len(task) + 1, C: decor.DidentRight}),
+					decor.Name(job, decor.WCSyncSpaceR),
+					// decor.DSyncWidth bit enables column width synchronization
+					decor.CountersNoUnit("%d / %d", decor.WCSyncWidth),
+				),
+				mpb.AppendDecorators(
+					decor.Percentage(decor.WC{W: 5}),
+					// replace ETA decorator with "done" message, OnComplete event
+					decor.OnComplete(
+						// ETA decorator with ewma age of 60
+						decor.EwmaETA(decor.ET_STYLE_GO, 60, decor.WCSyncWidth), "done",
+					),
+				),
+			)
+			if len(contexts) > 0 {
+				contexts[0].Bars[contexts[0].Index] = bar
+			}
+		} else {
+			logrus.Printf("======>%d", contexts[0].Index)
+			if len(contexts) > 0 {
+				logrus.Printf("----->%d", contexts[0].Index)
+				task = task + "-" + strconv.Itoa(contexts[0].Index)
+			}
+			bar = c.ProcessBars.AddBar(length,
+				//mpb.BarQueueAfter(contexts[0].Bars[contexts[0].Index]),
+				mpb.BarRemoveOnComplete(),
+			//	mpb.BarFillerClearOnComplete(),
+				mpb.PrependDecorators(
+					// simple name decorator
+					decor.Name(task, decor.WC{W: len(task) + 1, C: decor.DidentRight}),
+					decor.Name(job, decor.WCSyncSpaceR),
+					// decor.DSyncWidth bit enables column width synchronization
+					decor.CountersNoUnit("%d / %d", decor.WCSyncWidth),
+				),
+				mpb.AppendDecorators(
+					decor.Percentage(decor.WC{W: 5}),
+					// replace ETA decorator with "done" message, OnComplete event
+					decor.OnComplete(
+						// ETA decorator with ewma age of 60
+						decor.EwmaETA(decor.ET_STYLE_GO, 60, decor.WCSyncWidth), "done",
+					),
+				),
+			)
+			contexts[0].Bars[contexts[0].Index] = bar
+		}
+		/*
+
 		bar := progressbar.NewOptions64(length,
 			progressbar.OptionSetWriter(ansi.NewAnsiStdout()),
 			progressbar.OptionEnableColorCodes(true),
@@ -157,8 +266,11 @@ func (c Crawler) __download(obj IDownloadObject, downloadDir string) error {
 				SaucerPadding: " ",
 				BarStart:      "[",
 				BarEnd:        "]",
-			}))
-		out = io.MultiWriter(out, bar)
+			}))*/
+		out = io.MultiWriter(out, &barWriter{
+			bar: bar,
+			start: time.Now(),
+		})
 	}
 
 	_, err = io.Copy(out, resp.Body)
