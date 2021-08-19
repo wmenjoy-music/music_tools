@@ -3,7 +3,7 @@ package main
 import (
 	"github.com/mattn/go-colorable"
 	"github.com/sirupsen/logrus"
-	"wmenjoy/music/app"
+	"wmenjoy/music/pkg/app"
 )
 
 func main() {
