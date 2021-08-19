@@ -56,7 +56,12 @@ func Download() error {
 				return err
 			}
 			for _, albumInfo := range result.([]model.AlbumInfo) {
+				//增加过滤功能，针对某种类型的专辑不下载
+				if len(config.FilterDateTypes) > 0 && utils.InArray(albumInfo.DataType, config.FilterDateTypes){
+					continue
+				}
 
+				//这个album的用户信息可能不对，尤其是对于合集来说
 				targetDir := service.BaseAlbumDownloadDir(config.DownloadDir, albumInfo)
 				err = os.MkdirAll(targetDir, fs.ModePerm)
 				if err != nil {

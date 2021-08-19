@@ -145,9 +145,10 @@ func (d Downloader) Run(group *sync.WaitGroup) {
 				logrus.Printf("线程池关闭")
 				return
 			}
+
 			err := d.crawler.Download(x.object, x.downloadDir)
 			if err != nil {
-				//
+				logrus.Printf("下载文件:%s 错误：%s", x.object.getFileName(), err.Error())
 			}
 
 		case _, ok := <-d.closeChan:

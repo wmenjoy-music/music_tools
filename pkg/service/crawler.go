@@ -73,7 +73,7 @@ type Crawler struct {
 
 // ParsePage 使用get方法获取页面
 func (c Crawler) ParsePage(url string, objectConsumer func(Body io.Reader) (interface{}, error)) (interface{}, error) {
-	rand := time.Duration(rand.Intn(1000))
+	rand := time.Duration(rand.Intn(2))
 	time.Sleep(rand * time.Millisecond)
 	res, err := http.Get(url)
 	if err != nil {
@@ -86,7 +86,20 @@ func (c Crawler) ParsePage(url string, objectConsumer func(Body io.Reader) (inte
 	return objectConsumer(res.Body)
 }
 
-func (c Crawler) Download(obj IDownloadObject, downloadDir string) error {
+func (c Crawler) Download(obj IDownloadObject, downloadDir string) error{
+	for count := 0; count <= c.Retry; count ++ {
+		err := c.__download(obj, downloadDir)
+		if err == nil {
+			return nil
+		}
+		logrus.Printf("下载文件:%s 错误：%s", obj.getFileName(), err.Error())
+	}
+
+
+	return nil
+}
+
+func (c Crawler) __download(obj IDownloadObject, downloadDir string) error {
 	if obj == nil {
 		return errors.New("不合法的下载对象")
 	}
@@ -97,7 +110,7 @@ func (c Crawler) Download(obj IDownloadObject, downloadDir string) error {
 		logrus.Printf("文件已经下载：%s", path.Join(downloadDir, fileName))
 		return nil
 	}
-	rand := time.Duration(rand.Intn(1000))
+	rand := time.Duration(rand.Intn(500))
 	time.Sleep(rand * time.Millisecond)
 
 	resp, err := http.Get(obj.getDownloadUrl())
