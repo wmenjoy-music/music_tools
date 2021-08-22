@@ -6,6 +6,12 @@ import (
 	"wmenjoy/music/pkg/model"
 )
 
+type IForumSite interface {
+	ItemListParser() func(body io.Reader) (interface{}, error)
+	DetailParser() func(body io.Reader) (interface{}, error)
+	SubForumParser() func(body io.Reader) (interface{}, error)
+}
+
 type ISite interface {
 	IsAlbumInfoUrl(url string) bool
 	// GetUrl 根据Path 获取绝对的url

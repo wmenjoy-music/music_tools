@@ -16,4 +16,5 @@ require (
 	github.com/stretchr/testify v1.7.0
 	github.com/tredoe/term v0.0.0-20161130133337-e551c64f56c0 // indirect
 	github.com/vbauerster/mpb/v7 v7.1.3
+	golang.org/x/text v0.3.6 // indirect
 )

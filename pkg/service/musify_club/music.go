@@ -2,12 +2,13 @@ package musify_club
 
 import (
 	"fmt"
-	"github.com/PuerkitoBio/goquery"
-	"github.com/sirupsen/logrus"
 	"io"
 	"strings"
 	"wmenjoy/music/pkg/model"
 	"wmenjoy/music/pkg/service"
+
+	"github.com/PuerkitoBio/goquery"
+	"github.com/sirupsen/logrus"
 )
 
 type musifyClub struct {
@@ -132,6 +133,7 @@ func (m musifyClub) AlbumListParser() func(Body io.Reader) (interface{}, error) 
 
 func (m musifyClub) AlbumInfoParser() func(body io.Reader) (interface{}, error) {
 	return func(body io.Reader) (interface{}, error) {
+
 		// Load the HTML document
 		doc, err := goquery.NewDocumentFromReader(body)
 		if err != nil {

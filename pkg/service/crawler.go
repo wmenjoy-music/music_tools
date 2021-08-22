@@ -8,8 +8,6 @@ import (
 	"net/http"
 	"os"
 	"path"
-	"strconv"
-	"strings"
 	"sync"
 	"time"
 	"wmenjoy/music/pkg/utils"
@@ -148,12 +146,12 @@ func (c *Crawler) __download(obj IDownloadObject, downloadDir string, contexts .
 	}
 
 	fileName := utils.ValidateFileName(obj.getFileName())
-	logrus.Printf("开始下载文件：%s", path.Join(downloadDir, fileName))
+	//logrus.Printf("开始下载文件：%s", path.Join(downloadDir, fileName))
 	if val, _ := utils.PathExists(path.Join(downloadDir, fileName)); val {
-		logrus.Printf("文件已经下载：%s", path.Join(downloadDir, fileName))
+		//logrus.Printf("文件已经下载：%s", path.Join(downloadDir, fileName))
 		return nil
 	}
-	rand := time.Duration(rand.Intn(500))
+	rand := time.Duration(rand.Intn(200))
 	time.Sleep(rand * time.Millisecond)
 
 	resp, err := http.Get(obj.getDownloadUrl())
@@ -182,7 +180,7 @@ func (c *Crawler) __download(obj IDownloadObject, downloadDir string, contexts .
 		if len(contexts) > 0 {
 
 		}
-		logrus.Printf("下载完成文件：%s", fileName)
+		//logrus.Printf("下载完成文件：%s", fileName)
 
 	}(f)
 
@@ -192,14 +190,10 @@ func (c *Crawler) __download(obj IDownloadObject, downloadDir string, contexts .
 	out = f
 
 	if c.Options.ShowProgress {
-		job := fileName[strings.Index(fileName, "-")+2:]
+		job := fileName
 		task := "downloading"
 		var bar *mpb.Bar
 		if len(contexts) == 0 || contexts[0].Bars[contexts[0].Index] == nil {
-			if len(contexts) > 0 {
-				task = task + "-" + strconv.Itoa(contexts[0].Index)
-			}
-
 			bar = c.ProcessBars.AddBar(length,
 				//	mpb.BarFillerClearOnComplete(),
 				mpb.BarRemoveOnComplete(),
@@ -222,10 +216,6 @@ func (c *Crawler) __download(obj IDownloadObject, downloadDir string, contexts .
 				contexts[0].Bars[contexts[0].Index] = bar
 			}
 		} else {
-			if len(contexts) > 0 {
-				logrus.Printf("----->%d", contexts[0].Index)
-				task = task + "-" + strconv.Itoa(contexts[0].Index)
-			}
 			bar = c.ProcessBars.AddBar(length,
 				//mpb.BarQueueAfter(contexts[0].Bars[contexts[0].Index]),
 				mpb.BarRemoveOnComplete(),

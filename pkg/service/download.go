@@ -70,7 +70,6 @@ type downloadInfo struct {
 }
 
 func (d *Downloader) Start(threadNum int) {
-	logrus.Printf("threadNum is %d", threadNum)
 	d.wg.Add(threadNum)
 	for i := 0; i < threadNum; i++ {
 		go d.Run(d.wg)
@@ -121,7 +120,6 @@ func BaseAlbumDownloadDir(baseDir string, info model.AlbumInfo) string {
 
 // PrepareDownload 准备目录， 将下载数据发送到Channels
 func (d *Downloader) PrepareDownload(info model.AlbumInfo, baseDir string) {
-	logrus.Printf("开始入队列：%s", info.Name)
 	d.songChan <- downloadInfo{
 		object: DownloadImage{
 			DownloadUrl: info.Image,
@@ -150,20 +148,17 @@ func (d *Downloader) PrepareDownload(info model.AlbumInfo, baseDir string) {
 			downloadDir: BaseAlbumDownloadDir(baseDir, info),
 		}
 	}
-	logrus.Printf("入队列完成：%s", info.Name)
 }
 
 func (d *Downloader) Run(group *sync.WaitGroup) {
 	context := NewContext(d.bars, d.barWaitGroup)
 	defer func() {
-		logrus.Printf("程序退出===》")
 		group.Done()
 	}()
 	for {
 		select {
 		case x, ok := <-d.songChan:
 			if !ok {
-				logrus.Printf("线程池关闭")
 				return
 			}
 			d.process(x, context)
