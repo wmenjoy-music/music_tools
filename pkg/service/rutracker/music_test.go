@@ -8,7 +8,7 @@ import (
 )
 
 func TestRutracker_ParserAlum(t *testing.T) {
-	r := Rutracker{}
+	r := NewForumSite()
 
 	//crawler := service.Crawler{}
 	file, err := os.Open("d://code/music_tools/test/rutracker_forum_list.html")
@@ -19,4 +19,17 @@ func TestRutracker_ParserAlum(t *testing.T) {
 
 	assert.Nil(t, err)
 	assert.Nil(t, p)
+}
+func TestRutracker_ParserForumPost(t *testing.T) {
+	r := NewForumSite()
+
+	//crawler := service.Crawler{}
+	file, err := os.Open("/Users/liujinliang/workspace/music/music_manager/test/rutracker_forum_detail_3.html")
+	assert.Nil(t, err)
+	p, err := r.DetailParser()(file)
+
+	//p, err := crawler.ParsePage("https://w1.musify.club/release/medlyaki-shkolnih-diskotek-2021-1484710", )
+
+	assert.Nil(t, err)
+	assert.NotNil(t, p)
 }

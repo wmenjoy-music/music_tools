@@ -1,5 +1,25 @@
 package model
 
+type ForumArtistInfo struct {
+
+}
+type ForumAlbumInfo struct {
+	Title     string
+	Url       string
+	Artist    string
+	Name      string
+	GenreType string
+	BitRate   string
+	FileType  string
+	Duration  string
+	Country   string
+	Content   string
+	Year      string
+	MagnetLink string
+	MagnetTitle string
+	Torrent    string
+}
+
 type ArtistInfo struct {
 	Name    string
 	Id      string
