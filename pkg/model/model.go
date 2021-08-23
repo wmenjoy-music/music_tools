@@ -1,23 +1,58 @@
 package model
 
-type ForumArtistInfo struct {
+type ForumMusicInfo struct {
+	Index    string
+	Name     string
+	Duration string
+	Link     []string
 
 }
-type ForumAlbumInfo struct {
-	Title     string
-	Url       string
-	Artist    string
-	Name      string
-	GenreType string
-	BitRate   string
-	FileType  string
-	Duration  string
-	Country   string
-	Content   string
-	Year      string
-	MagnetLink string
+type ForumAlbumDetail struct{
+	Title         string
+	CreateDate    string
+	Duration string
+	Artist   string
+	Name     string
+	Musics   []ForumMusicInfo
+	Image    string
+	Content  string
+}
+
+type ForumDiscographyAlbumInfo struct{
+	extraInfo  map[string]interface{}
+}
+
+type ForumDiscographyInfo struct {
+	Title       string
+	Url         string
+	Artist      string
+	Country     string
+	GenreType   string
+	Years       string
+	FileType    string
+	BitRate     string
+	Content     string
+	Duration    string
+	MagnetLink  string
 	MagnetTitle string
-	Torrent    string
+	Torrent     string
+	ExtraInfo  map[string]interface{}
+}
+type ForumAlbumInfo struct {
+	Title       string
+	Url         string
+	Artist      string
+	Name        string
+	GenreType   string
+	BitRate     string
+	FileType    string
+	Duration    string
+	Country     string
+	Content     string
+	Year        string
+	MagnetLink  string
+	MagnetTitle string
+	Torrent     string
 }
 
 type ArtistInfo struct {

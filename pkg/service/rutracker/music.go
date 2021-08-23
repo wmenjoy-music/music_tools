@@ -64,12 +64,12 @@ func (r Rutracker) DetailParser() func(body io.Reader) (interface{}, error){
 			return nil, errors.New("没有信息")
 		}
 
-		postWrapDiv := divMessage.Find("div.post_wrap")
+		postWrapDiv := divMessage.Find("div.post_wrap").First()
 		if postWrapDiv == nil {
 			return nil, errors.New("没有信息")
 		}
 
-		postBody := postWrapDiv.Find("div.post_body")
+		postBody := postWrapDiv.Find("div>.post_body")
 		extraLinkData, _ := postBody.Attr("data-ext_link_data")
 
 		text := postBody.Text()
@@ -81,7 +81,9 @@ func (r Rutracker) DetailParser() func(body io.Reader) (interface{}, error){
 		torrentUrl, _ := aTorrent.Attr("href")
 		logrus.Printf("%s,%s,%s,%s", dataShareUrl, dataShareTitle, extraLinkData, text)
 		tags := []string{"Жанр", "Страна исполнителя (группы)", "Год издания", "Аудиокодек", "Тип рипа", "Битрейт аудио", "Продолжительность", "Исполнитель",
-			"Альбом","Страна","Дата выпуска", "Формат", "Битрейт",
+			"Альбом","Страна","Дата выпуска", "Формат", "Битрейт", "Издатель (лейбл)", "Носитель", "Номер по каталогу", "Годы выпуска дисков",
+
+
 			}
 		tagMap := r.parseTag(text, tags)
 
@@ -94,6 +96,36 @@ func (r Rutracker) DetailParser() func(body io.Reader) (interface{}, error){
 			return ""
 		}
 
+
+		if strings.Contains(dataShareTitle, "Дискография") ||
+			strings.Contains(dataShareTitle, "дискография") ||
+			strings.Contains(dataShareTitle, "Discography") ||
+			strings.Contains(dataShareTitle, "discography") ||
+			strings.Contains(dataShareTitle, "Collection") ||
+			strings.Contains(dataShareTitle, "Коллекция") {
+			if (strings.Contains(dataShareTitle, "Collection") ||
+				strings.Contains(dataShareTitle, "Коллекция") ) &&
+				strings.Contains(dataShareTitle, "VA") {
+				return nil, nil
+			}
+			return &model.ForumDiscographyInfo{
+				Artist: getTag(tagMap, "Исполнитель", "title"),
+				Title: dataShareTitle,
+				Url : dataShareUrl,
+				Years: getTag(tagMap, "Год выпуска диска", "Годы выпуска дисков", "Год издания"),
+				GenreType: getTag(tagMap,"Жанр"),
+				Country: getTag(tagMap,"Страна исполнителя (группы)", "Страна"),
+				BitRate: getTag(tagMap,"Битрейт аудио","Битрейт"),
+				FileType:  getTag(tagMap,"Аудиокодек","Формат"),
+				Duration: tagMap["Продолжительность"],
+				Content: text,
+				MagnetLink: magnetLink,
+				MagnetTitle: magnetTitle,
+				Torrent: r.GetUrl(torrentUrl),
+				ExtraInfo: r.ParseAlbumInfo(postBody),
+			}, nil
+
+		}
 
 		return &model.ForumAlbumInfo{
 				Artist: getTag(tagMap, "Исполнитель", "title"),
@@ -179,10 +211,49 @@ func (r Rutracker) parseTag(text string, tags []string) map[string]string {
 			tagMap["title"] = strings.TrimSpace(line[:index])
 		} else if index := strings.Index(line, "- дискография"); index >= 0 {
 			tagMap["title"] = strings.TrimSpace(line[:index])
+		} else if  index := strings.Index(line, "- Discography"); index >= 0 {
+			tagMap["title"] = strings.TrimSpace(line[:index])
+		} else if  index := strings.Index(line, "- discography"); index >= 0 {
+			tagMap["title"] = strings.TrimSpace(line[:index])
 		} else {
 			parseTag(line)
 		}
 
 	}
 	return tagMap
+}
+
+
+
+func (r Rutracker) ParseAlbumInfo(postBody *goquery.Selection) map[string]interface{} {
+	return r.parseSpWrapper(postBody.Children())
+}
+
+func (r Rutracker) parseSpWrapper(selection *goquery.Selection) map[string]interface{} {
+	totalmap := make(map[string]interface{})
+	selection.Each(func(i int, selection *goquery.Selection) {
+		// 如果之前有span
+
+		if selection.Find(".sp-body:only-child .sp-wrap").Size() > 0 {
+			title := selection.Find("div.sp-head").First().Text()
+			subMap := r.parseSpWrapper(selection.Find(".sp-body .sp-wrap"))
+			tempMap := make(map[string]interface{})
+			for key, value := range subMap {
+				tempMap[key] = value
+			}
+			totalmap[title] = tempMap
+			return
+		}
+
+		title := selection.Find("div.sp-head").First().Text()
+		sp_body := selection.Find("div.sp-body")
+		sp_text := sp_body.Text()
+		image, _ := sp_body.Find(".postImg").Attr("title")
+		totalmap[title]= model.ForumAlbumDetail{
+			Name: title,
+			Content: sp_text,
+			Image: image,
+		}
+	})
+	return totalmap
 }
