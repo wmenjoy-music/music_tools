@@ -5,21 +5,20 @@ type ForumMusicInfo struct {
 	Name     string
 	Duration string
 	Link     []string
-
 }
-type ForumAlbumDetail struct{
-	Title         string
-	CreateDate    string
-	Duration string
-	Artist   string
-	Name     string
-	Musics   []ForumMusicInfo
-	Image    string
-	Content  string
+type ForumAlbumDetail struct {
+	Title      string
+	CreateDate string
+	Duration   string
+	Artist     string
+	Name       string
+	Musics     []ForumMusicInfo
+	Image      string
+	Content    string
 }
 
-type ForumDiscographyAlbumInfo struct{
-	extraInfo  map[string]interface{}
+type ForumDiscographyAlbumInfo struct {
+	extraInfo map[string]interface{}
 }
 
 type ForumDiscographyInfo struct {
@@ -36,7 +35,7 @@ type ForumDiscographyInfo struct {
 	MagnetLink  string
 	MagnetTitle string
 	Torrent     string
-	ExtraInfo  map[string]interface{}
+	ExtraInfo   map[string]interface{}
 }
 type ForumAlbumInfo struct {
 	Title       string
@@ -53,6 +52,7 @@ type ForumAlbumInfo struct {
 	MagnetLink  string
 	MagnetTitle string
 	Torrent     string
+	ExtraInfo   map[string]interface{}
 }
 
 type ArtistInfo struct {

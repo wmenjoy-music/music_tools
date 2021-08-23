@@ -80,7 +80,7 @@ func (r Rutracker) DetailParser() func(body io.Reader) (interface{}, error) {
 		torrentUrl, _ := aTorrent.Attr("href")
 		logrus.Printf("%s,%s,%s,%s", dataShareUrl, dataShareTitle, extraLinkData, text)
 		tags := []string{"Жанр", "Страна исполнителя (группы)", "Год издания", "Аудиокодек", "Тип рипа", "Битрейт аудио", "Продолжительность", "Исполнитель",
-			"Альбом", "Страна", "Дата выпуска", "Формат", "Битрейт", "Издатель (лейбл)", "Носитель", "Номер по каталогу", "Годы выпуска дисков",
+			"Альбом", "Страна", "Дата выпуска", "Формат", "Битрейт", "Издатель (лейбл)", "Носитель", "Номер по каталогу", "Годы выпуска дисков", "Лейбл/Label",
 		}
 		tagMap := r.parseTag(text, tags)
 
@@ -138,6 +138,7 @@ func (r Rutracker) DetailParser() func(body io.Reader) (interface{}, error) {
 			MagnetLink:  magnetLink,
 			MagnetTitle: magnetTitle,
 			Torrent:     r.GetUrl(torrentUrl),
+			ExtraInfo:   r.ParseAlbumInfo(postBody),
 		}, nil
 
 	}
@@ -223,17 +224,29 @@ func (r Rutracker) ParseAlbumInfo(postBody *goquery.Selection) map[string]interf
 
 func (r Rutracker) parseSpWrapper(selection *goquery.Selection) map[string]interface{} {
 	totalmap := make(map[string]interface{})
+	var list []interface{} = nil
+	listTitle := ""
 	selection.Each(func(i int, selection *goquery.Selection) {
 		// 如果之前有span
+		prevSelection := selection.Prev()
+		if prevSelection.Size() > 0 && (prevSelection.Find("span.post-i").Size() > 0 || prevSelection.Find("span.p-color").Size() > 0) && prevSelection.Get(0).Data == "span" && strings.Contains(prevSelection.Text(), ":") {
+
+			if list != nil {
+				totalmap[listTitle] = list
+			}
+			list = make([]interface{}, 0)
+			listTitle = strings.TrimSpace(prevSelection.Text())
+			listTitle = listTitle[:len(listTitle)-1]
+		}
 
 		if selection.Find(".sp-body .sp-wrap").Size() > 0 {
 			title := selection.Find("div.sp-head").First().Text()
 			subMap := r.parseSpWrapper(selection.Find(".sp-body").First().ChildrenFiltered(".sp-wrap"))
-			tempMap := make(map[string]interface{})
-			for key, value := range subMap {
-				tempMap[key] = value
+			if list != nil {
+				list = append(list, subMap)
+			} else {
+				totalmap[title] = subMap
 			}
-			totalmap[title] = tempMap
 			return
 		}
 
@@ -241,11 +254,21 @@ func (r Rutracker) parseSpWrapper(selection *goquery.Selection) map[string]inter
 		sp_body := selection.Find("div.sp-body")
 		sp_text := sp_body.Text()
 		image, _ := sp_body.Find(".postImg").Attr("title")
-		totalmap[title] = model.ForumAlbumDetail{
+		detail := model.ForumAlbumDetail{
 			Name:    title,
 			Content: sp_text,
 			Image:   image,
 		}
+		if list != nil {
+			list = append(list, detail)
+		} else {
+			totalmap[title] = detail
+		}
 	})
+
+	if list != nil {
+		totalmap[listTitle] = list
+	}
+
 	return totalmap
 }

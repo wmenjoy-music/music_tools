@@ -24,7 +24,7 @@ func TestRutracker_ParserForumPost(t *testing.T) {
 	r := NewForumSite()
 
 	//crawler := service.Crawler{}
-	file, err := os.Open("d://code/music_tools/test/rutracker_forum_detail_2.html")
+	file, err := os.Open("d://code/music_tools/test/rutracker_forum_detail_4.html")
 	assert.Nil(t, err)
 	p, err := r.DetailParser()(file)
 
